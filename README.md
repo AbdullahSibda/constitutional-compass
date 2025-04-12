@@ -6,7 +6,8 @@
 - Tests must pass before merging  
 
 ## Setup Commands  
-- Install Node.js v22  
+- Install Node.js v18.20.4
+- If you have v22 installed, just run `nvm use 18` in your terminal 
 - Run these in order:
   `npm install react@latest react-dom@latest @testing-library/react@latest`
   `npm install`  
