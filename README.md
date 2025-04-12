@@ -23,3 +23,7 @@
 ## Team Rules  
 - Discuss uncertainties in group chat first  
 - Verify tests pass before any push to `dev`  
+
+## Backend Rules
+- Add all backend code to the api folder so that Azure can detect it
+- Tests for backend can go into the tests folder
