@@ -8,8 +8,8 @@
 ## Setup Commands  
 - Install Node.js v22  
 - Run these in order:
-  `npm install` 
-  `npm install react@latest react-dom@latest @testing-library/react@latest`   
+  `npm install react@latest react-dom@latest @testing-library/react@latest`
+  `npm install`  
   `npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom`
   `npm install --save-dev @babel/preset-env @babel/preset-react babel-jest` 
   `npm install --save-dev @testing-library/react@14 jest@29 babel-jest@29 @babel/preset-react@7 --legacy-peer-deps`   
