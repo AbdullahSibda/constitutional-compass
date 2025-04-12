@@ -7,13 +7,10 @@
 
 ## Setup Commands  
 - Install Node.js v18.20.4
-- If you have v22 installed, just run `nvm use 18` in your terminal 
-- Run these in order:
-  `npm install react@latest react-dom@latest @testing-library/react@latest`
-  `npm install`  
-  `npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom`
-  `npm install --save-dev @babel/preset-env @babel/preset-react babel-jest` 
-  `npm install --save-dev @testing-library/react@14 jest@29 babel-jest@29 @babel/preset-react@7 --legacy-peer-deps`   
+- If you have v22 installed, just run `nvm use 18` in your terminal
+- Clone the repo
+- Cd into the repo
+- Run   `npm install`
 
 ## Testing Rules  
 - All tests go in `src/tests/`  
