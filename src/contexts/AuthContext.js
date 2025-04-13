@@ -34,9 +34,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Optional: sign in with magic link or providers
+  const siteUrl =
+    window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "https://wonderful-river-0d8fbf010.6.azurestaticapps.net";
   const signIn = () =>
     supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: siteUrl,
+      },
     });
 
   const signOut = () => supabase.auth.signOut();
