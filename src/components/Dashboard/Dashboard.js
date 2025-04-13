@@ -31,7 +31,7 @@ function Dashboard() {
                   className="sidebar-link"
                   onClick={() => setActiveSection("edit")}
                 >
-                  Edit Data
+                  <p>Edit</p> <p>Data</p>
                 </button>
               </li>
               <li className={`sidebar-item ${activeSection === "manage" ? "active" : ""}`}>
