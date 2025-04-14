@@ -30,7 +30,9 @@ body {
   background-color: var(--mid-dark);
   padding: 2rem 1rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   align-items: flex-start;
 }
 
@@ -48,18 +50,12 @@ body {
   filter: brightness(0) invert(1); /* make logo white-ish if it's dark */
 }
 
-
-
 .sidebar-title {
   color: var(--white);
   font-family: var(--heading-font);
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 2rem;
-}
-
-.auth-container {
-  margin-top: auto;
 }
 
 .auth-button {
@@ -118,12 +114,13 @@ body {
   color: var(--white);
   margin-bottom: 2rem;
   line-height: 1.2;
-  white-space: nowrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .search-container {
   position: relative;
-  width: 100%;
+  width: 80%;
   max-width: 600px; 
   margin: 0 auto;
 }
@@ -184,5 +181,33 @@ body {
   margin-top: 1.5rem;
   font-size: 1.1rem;
   color: var(--light-grey);
-  white-space: nowrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Add to your Home.css */
+.welcome-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.welcome-message {
+  font-family: var(--heading-font);
+  font-size: 1.5rem;
+  color: var(--white);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-link {
+  color: var(--teal-accent);
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.dashboard-link:hover {
+  color: #368079;
+  text-decoration: underline;
 }
