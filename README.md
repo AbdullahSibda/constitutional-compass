@@ -1,7 +1,8 @@
 # constitutional-compass Development Guide
 
 ## Branch Rules  
-- All pushes must go to `dev` branch  
+- For each sprint, make a new branch and push all code to that
+- At the end of the sprint, merge with `dev` branch  
 - Never push directly to `main`  
 - Tests must pass before merging  
 
