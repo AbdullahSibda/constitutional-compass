@@ -1,10 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate("/"); // Redirect to home after logout
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -23,7 +33,7 @@ const Navbar = () => {
         </li>
         {user ? (
           <li>
-            <button className="navbar-logout" onClick={signOut}>
+            <button className="navbar-logout" onClick={handleLogout}>
               Logout
             </button>
           </li>
