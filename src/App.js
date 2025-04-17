@@ -1,29 +1,59 @@
 import React from "react";
-// eslint-disable-next-line no-unused-vars
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Home from "./components/Home/Home";
 import Login from "./components/Login/Login";
 import Dashboard from "./components/Dashboard/Dashboard";
 
-
-const App = () => {
-  const { user } = useAuth();
-
+// Create a layout component that wraps your routes
+const AppLayout = () => {
   return (
     <section className="App">
-      {/* Main content goes here */}
-      <Routes>
-        {/* Define your routes here */}
-        <Route path="/" element={<Home />} />
-        {/* <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} /> */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={user ? <Dashboard /> : <Login />} />
-        {/* Add more routes as needed */}
-      </Routes>
+      <Outlet /> {/* This renders the matched route */}
     </section>
   );
+};
+
+// Create protected route wrapper
+const ProtectedRoute = ({ element }) => {
+  const { user } = useAuth();
+  return user ? element : <Login />;
+};
+
+// Define your routes
+const router = createBrowserRouter([
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      },
+      {
+        path: "/login",
+        element: <Login />
+      },
+      {
+        path: "/dashboard",
+        element: <ProtectedRoute element={<Dashboard />} />
+      },
+      // Add more routes as needed
+      // {
+      //   path: "/about",
+      //   element: <About />
+      // }
+    ]
+  }
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+});
+
+// Main App component
+const App = () => {
+  return <RouterProvider router={router} />;
 };
 
 export default App;

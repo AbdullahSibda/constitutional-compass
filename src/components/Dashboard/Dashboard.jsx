@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import "./Dashboard.css";
 import Navbar from "../Navbar/Navbar";
-import UploadSection from "./UploadSection";
-import EditSection from "./EditSection";
-import ManageSection from "./ManageSection";
+import FolderBrowser from "../FileManager/FolderBrowser"; // New import
 
 function Dashboard() {
-  const [activeSection, setActiveSection] = useState("upload");
+  const [activeSection, setActiveSection] = useState("browser"); // Changed default to browser
 
   return (
     <>
@@ -18,6 +16,15 @@ function Dashboard() {
         <section className="app-container">
           <nav className="sidebar">
             <ul className="sidebar-menu">
+              {/* New Browser option */}
+              <li className={`sidebar-item ${activeSection === "browser" ? "active" : ""}`}>
+                <button
+                  className="sidebar-link"
+                  onClick={() => setActiveSection("browser")}
+                >
+                  File Browser
+                </button>
+              </li>
               <li className={`sidebar-item ${activeSection === "upload" ? "active" : ""}`}>
                 <button
                   className="sidebar-link"
@@ -45,9 +52,7 @@ function Dashboard() {
             </ul>
           </nav>
           <main className="main-content">
-            {activeSection === "upload" && <UploadSection />}
-            {activeSection === "edit" && <EditSection />}
-            {activeSection === "manage" && <ManageSection />}
+            {activeSection === "browser" && <FolderBrowser />}
           </main>
         </section>
       </article>

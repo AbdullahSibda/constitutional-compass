@@ -1,0 +1,244 @@
+/* FolderBrowser.css */
+:root {
+  --base-spacing: 0.5rem;
+  --border-radius: 0.375rem;
+}
+
+.folder-browser {
+  font-family: var(--body-font);
+  background-color: var(--dark-bg);
+  color: var(--light-grey);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border-radius: var(--border-radius);
+  max-width: min(1200px, 95vw);
+  margin: 0 auto;
+}
+
+/* Improved breadcrumbs */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.breadcrumb-item {
+  background-color: var(--mid-dark);
+  color: var(--light-grey);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-family: var(--body-font);
+  transition: background 0.2s ease;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.breadcrumb-item:hover:not([disabled]) {
+  background-color: #2a3542;
+}
+
+.breadcrumb-item[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.breadcrumb-separator {
+  color: var(--teal-accent);
+  padding: 0 0.25rem;
+  user-select: none;
+  font-weight: bold;
+  margin: 0 -0.125rem;
+}
+
+/* Aligned action buttons */
+.browser-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--base-spacing);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.browser-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  background-color: var(--mid-dark);
+  color: var(--light-grey);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-family: var(--body-font);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.browser-actions button:hover:not([disabled]) {
+  background-color: #2a3542;
+}
+
+.browser-actions button.upload-button {
+  background-color: var(--teal-accent);
+  color: var(--white);
+}
+
+.browser-actions button.cancel-button {
+  background-color: #d32f2f;
+  color: var(--white);
+}
+
+.browser-actions button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive create folder form */
+.create-folder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--base-spacing);
+  margin-bottom: 1.5rem;
+  align-items: center;
+  background-color: var(--mid-dark);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+}
+
+.create-folder input {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 0.5rem 1rem;
+  border: 1px solid #3a4758;
+  border-radius: var(--border-radius);
+  background-color: #1a222e;
+  color: var(--light-grey);
+  font-family: var(--body-font);
+}
+
+.create-folder button {
+  flex: 1 0 auto;
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+}
+
+/* Improved contents grid */
+.browser-contents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: var(--base-spacing);
+  margin-top: 1rem;
+}
+
+.browser-item {
+  background-color: var(--mid-dark);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  margin-bottom: 0.5em;
+  width: 100%;
+  text-align: left;
+  border: none;
+  color: inherit;
+}
+
+/* Responsive empty state */
+.empty-folder-message {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--light-grey);
+  background-color: var(--mid-dark);
+  border-radius: var(--border-radius);
+  margin-top: 1rem;
+  min-height: min(200px, 30vh);
+}
+
+/* Tooltip for disabled buttons */
+button[disabled].upload-button::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--mid-dark);
+  color: var(--light-grey);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .browser-actions {
+    gap: 0.5rem;
+  }
+  
+  .browser-actions button {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .create-folder {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .create-folder input {
+    width: 100%;
+  }
+  
+  .browser-contents {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Remove list styling for semantic elements */
+menu, ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Ensure all interactive elements are aligned */
+button, input, [role="button"] {
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* If using button or a inside li */
+.browser-item-container {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.browser-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
