@@ -32,14 +32,13 @@ export function AuthProvider({ children }) {
     window.location.hostname === "localhost"
       ? "http://localhost:3000"
       : "https://wonderful-river-0d8fbf010.6.azurestaticapps.net";
-  const signIn = () =>
-    supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: siteUrl,
-      },
-    });
-
+      const signIn = () =>
+        supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${siteUrl}/prelogin`, // 👈 redirect directly here after login
+          },
+        });
   const signOut = () => supabase.auth.signOut();
 
   return (

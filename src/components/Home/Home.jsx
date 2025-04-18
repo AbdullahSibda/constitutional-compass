@@ -35,8 +35,8 @@ const Home = () => {
 
         {!user && (
   <nav className="auth-container">
-  <Link to="/prelogin" className="auth-button">
-    Become A Collaborator
+  <Link to="/Login" className="auth-button">
+    Login In As/Become A Collaborator
   </Link>
 </nav>
 )}
