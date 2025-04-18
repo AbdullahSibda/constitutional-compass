@@ -4,6 +4,7 @@ import { useAuth } from "./contexts/AuthContext";
 import Home from "./components/Home/Home";
 import Login from "./components/Login/Login";
 import Dashboard from "./components/Dashboard/Dashboard";
+import Prelogin from "./components/Login/prelogin"; // Updated import
 
 // Create a layout component that wraps your routes
 const AppLayout = () => {
@@ -15,33 +16,36 @@ const AppLayout = () => {
 };
 
 // Create protected route wrapper
-const ProtectedRoute = ({ element }) => {
+const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  return user ? element : <Login />;
+  return user ? children : <Login />; // Use `children` prop instead of `element`
 };
 
 // Define your routes
 const router = createBrowserRouter([
   {
-    element: <AppLayout />,
+    element: <AppLayout />, // Main layout
     children: [
       {
         path: "/",
-        element: <Home />
+        element: <Home /> // Home page
       },
       {
         path: "/login",
-        element: <Login />
+        element: <Login /> // Login page
+      },
+      {
+        path: "/prelogin",
+        element: <Prelogin /> // Prelogin page (added route)
       },
       {
         path: "/dashboard",
-        element: <ProtectedRoute element={<Dashboard />} />
+        element: (
+          <ProtectedRoute>
+            <Dashboard /> {/* Wrap protected component */}
+          </ProtectedRoute>
+        ) // Protected Dashboard route
       },
-      // Add more routes as needed
-      // {
-      //   path: "/about",
-      //   element: <About />
-      // }
     ]
   }
 ], {
@@ -57,3 +61,4 @@ const App = () => {
 };
 
 export default App;
+

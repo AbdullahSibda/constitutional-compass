@@ -1,0 +1,84 @@
+/* prelogin.css */
+
+.prelogin-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(to right, #056a83, #0bb9ab );
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 1rem;
+  }
+  
+  .prelogin-popup {
+    background-color: white;
+    padding: 2.5rem 3rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .prelogin-title {
+    font-size: 2rem;
+    color: #1d3557;
+    margin-bottom: 1rem;
+  }
+  
+  .prelogin-subtext {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+  }
+  
+  .prelogin-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .apply-button,
+  .google-login-button {
+    padding: 0.75rem 1.2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .apply-button {
+    background-color: #e63946;
+    color: white;
+  }
+  
+  .apply-button:hover {
+    background-color: #d62839;
+  }
+  
+  .google-login-button {
+    background-color: #1d3557;
+    color: white;
+  }
+  
+  .google-login-button:hover {
+    background-color: #16324f;
+  }
+  
+  /* Responsive */
+  @media (max-width: 480px) {
+    .prelogin-popup {
+      padding: 2rem;
+    }
+  
+    .prelogin-title {
+      font-size: 1.5rem;
+    }
+  
+    .prelogin-subtext {
+      font-size: 0.95rem;
+    }
+  }
+  
+  
