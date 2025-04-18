@@ -215,7 +215,6 @@ export default function Upload({
             }}
             className="file-input"
             disabled={disabled || loading}
-            accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif"
           />
         </fieldset>
 
