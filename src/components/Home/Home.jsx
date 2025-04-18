@@ -1,11 +1,12 @@
-import React, { useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
   const { user, signIn } = useAuth();
   const [ready, setReady] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'test') {
@@ -15,6 +16,12 @@ const Home = () => {
     const timeout = setTimeout(() => setReady(true), 400);
     return () => clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (user && ready) {
+      navigate("/dashboard");
+    }
+  }, [user, ready, navigate]);
 
   if (!ready) return null;
 
