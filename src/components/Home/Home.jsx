@@ -36,7 +36,7 @@ const Home = () => {
         {!user && (
           <nav className="auth-container">
             <button onClick={signIn} className="auth-button">
-              Login as Admin
+              Become A Collaborator
             </button>
           </nav>
         )}

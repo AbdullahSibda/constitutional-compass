@@ -40,7 +40,7 @@ body {
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* space between logo and title */
+  gap: 0.75rem; 
   margin-bottom: 2rem;
 }
 
@@ -48,7 +48,7 @@ body {
   width: 40px;
   height: auto;
   object-fit: contain;
-  filter: brightness(0) invert(1); /* make logo white-ish if it's dark */
+  filter: brightness(0) invert(1); 
 }
 
 .sidebar-title {
@@ -188,7 +188,7 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Add to your Home.css */
+
 .welcome-section {
   text-align: center;
   margin-bottom: 2rem;
