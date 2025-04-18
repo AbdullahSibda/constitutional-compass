@@ -21,6 +21,7 @@
   flex-wrap: wrap;
   gap: 0;
   margin-bottom: 1.5rem;
+  
 }
 
 .breadcrumb-wrapper {
@@ -38,17 +39,17 @@
   cursor: pointer;
   font-family: var(--body-font);
   transition: background 0.2s ease;
-  margin: 0;
+  margin: 0.5em;
   white-space: nowrap;
 }
 
 .breadcrumb-item:hover:not([disabled]) {
-  background-color: #2a3542;
+  background-color: #368079;
 }
 
 .breadcrumb-item[disabled] {
-  opacity: 0.7;
   cursor: default;
+  background-color: #368079;
 }
 
 .breadcrumb-separator {
@@ -62,7 +63,7 @@
 /* Aligned action buttons */
 .browser-actions {
   display: flex;
-  align-items: center;
+  align-items:end;
   gap: var(--base-spacing);
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
@@ -92,6 +93,9 @@
 .browser-actions button.upload-button {
   background-color: var(--teal-accent);
   color: var(--white);
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  border-radius: var(--border-radius);
 }
 
 .browser-actions button.cancel-button {
@@ -117,7 +121,7 @@
 }
 
 .create-folder input {
-  flex: 1 1 200px;
+  flex: 1 1 2em;
   min-width: 0;
   padding: 0.5rem 1rem;
   border: 1px solid #3a4758;
