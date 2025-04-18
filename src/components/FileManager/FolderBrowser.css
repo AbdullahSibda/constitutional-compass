@@ -117,7 +117,7 @@
 }
 
 .create-folder input {
-  flex: 1 1 200px;
+  flex: 1 1 2em;
   min-width: 0;
   padding: 0.5rem 1rem;
   border: 1px solid #3a4758;
