@@ -34,12 +34,13 @@ const Home = () => {
         </header>
 
         {!user && (
-          <nav className="auth-container">
-            <button onClick={signIn} className="auth-button">
-              Become A Collaborator
-            </button>
-          </nav>
-        )}
+  <nav className="auth-container">
+  <Link to="/prelogin" className="auth-button">
+    Become A Collaborator
+  </Link>
+</nav>
+)}
+
       </aside>
 
       <main className="main-content">
