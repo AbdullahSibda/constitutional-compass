@@ -27,6 +27,23 @@
   font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
+.navbar-logout {
+  background-color: var(--teal-accent);
+  color: var(--white);
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.navbar-logout:hover {
+  background-color: #368079;
+}
+
+
 /* Mobile menu styles */
 @media (max-width: 48em) {
   .navbar {
@@ -42,3 +59,4 @@
     padding-top: 1rem;
   }
 }
+

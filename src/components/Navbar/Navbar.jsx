@@ -1,47 +1,58 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./Navbar.css";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext"; // Assuming you have an auth context for signOut
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth(); // Assuming you have signOut in the context
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      navigate("/"); // Redirect to home after logout
+      await signOut();  // This is where you call the signOut function from the context
+      navigate("/");    // After logging out, navigate to the home page
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
+  const isDashboard = location.pathname.includes("dashboard");
+
   return (
     <nav className="navbar">
       <header className="navbar-logo">
-        <Link to="/">Constitutional Compass</Link>
+        {isDashboard ? (
+          <img
+            src="/images/logo.png"
+            alt="Logo"
+            className="logo-image"
+          />
+        ) : (
+          <Link to="/">
+            Constitutional Compass
+          </Link>
+        )}
       </header>
       <ul className="navbar-links">
-        <li>
-          <Link to="/about">About</Link>
-        </li>
-        <li>
-          <Link to="/features">Features</Link>
-        </li>
-        <li>
-          <Link to="/contact">Contact</Link>
-        </li>
-        {user ? (
-          <li>
-            <button className="navbar-logout" onClick={handleLogout}>
-              Logout
-            </button>
-          </li>
-        ) : (
-          <li>
-            <Link to="/login">Want to contribute?</Link>
-          </li>
+        {!isDashboard && (
+          <>
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+            <li>
+              <Link to="/features">Features</Link>
+            </li>
+            <li>
+              <Link to="/contact">Contact</Link>
+            </li>
+          </>
         )}
+        <li>
+          <button className="navbar-logout" onClick={handleLogout}>
+            Logout
+          </button>
+        </li>
       </ul>
     </nav>
   );
