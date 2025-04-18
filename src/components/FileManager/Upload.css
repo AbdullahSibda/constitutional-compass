@@ -230,3 +230,63 @@ output.success-message {
     padding: 1rem;
   }
 }
+
+/* Style optgroups */
+optgroup {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--teal-accent);
+  padding: 0.5rem 0;
+}
+
+optgroup option {
+  font-weight: normal;
+  padding-left: 1.5rem;
+}
+
+select {
+  padding: 0.75rem;
+  border: 1px solid var(--light-grey);
+  border-radius: 0.375rem;
+  background-color: var(--dark-bg);
+  color: var(--white);
+  width: 100%;
+}
+
+select:focus {
+  outline: 2px solid var(--teal-accent);
+}
+
+/* South Africa dropdown style enhancement */
+.form-group select {
+  appearance: none;
+  padding-right: 2.5rem; /* space for arrow */
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group select:hover:not(:disabled) {
+  border-color: var(--teal-accent);
+}
+
+/* Enhanced optgroup look */
+select optgroup {
+  background-color: var(--dark-bg);
+  color: var(--teal-accent);
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+select optgroup option {
+  color: var(--white);
+  padding-left: 1.25rem;
+  background-color: var(--dark-bg);
+}
+
+/* Optional: mobile-friendly fix */
+@media (max-width: 48rem) {
+  .form-group select {
+    font-size: 0.95rem;
+    padding: 0.65rem 2.5rem 0.65rem 0.75rem;
+  }
+}

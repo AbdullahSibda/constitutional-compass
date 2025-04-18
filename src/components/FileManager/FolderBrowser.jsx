@@ -268,9 +268,10 @@ export default function FolderBrowser() {
                     <button
                       className={`browser-item ${item.is_folder ? 'folder' : 'file'}`}
                       disabled={loading || !item.is_folder}
-                      onClick={() => navigateToFolder(item.id, item.name)}
+                      onClick={() => navigateToFolder(item.id, item.is_folder ? item.name : (item.metadata?.displayName || item.name))}
                     >
-                    {item.is_folder ? '📁' : '📄'} {item.name}
+                    {item.is_folder ? '📁' : '📄'}
+                    {item.is_folder ? item.name : (item.metadata?.displayName || item.name)}
                     {!item.is_folder && (
                       <mark className="file-type">{item.metadata?.file_type}</mark>
                     )}
