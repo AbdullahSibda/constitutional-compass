@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
-  const { user, signIn } = useAuth();
+  const { user } = useAuth();
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
 

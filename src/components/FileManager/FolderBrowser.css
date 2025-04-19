@@ -14,11 +14,10 @@
   margin: 0 auto;
 }
 
-/* Improved breadcrumbs */
 .breadcrumbs {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap:wrap;
   gap: 0;
   margin-bottom: 1.5rem;
   
@@ -54,9 +53,9 @@
 
 .breadcrumb-separator {
   color: var(--teal-accent);
-  padding: 0 0.25rem;
   user-select: none;
   font-weight: bold;
+  padding-left: 5em;
   margin: 0 -0.125rem;
 }
 
@@ -607,3 +606,4 @@ button, input, [role="button"] {
   font-size: 1.2rem;
   font-weight: 500;
 }
+
