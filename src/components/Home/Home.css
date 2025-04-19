@@ -3,14 +3,12 @@
 :root {
   --heading-font: 'Work Sans', sans-serif;
   --body-font: 'Inter', sans-serif;
-
   --dark-bg: #0B0C10;
   --mid-dark: #1F2833;
   --light-grey: #C5C6C7;
   --teal-accent: #45A29E;
   --white: #ffffff;
 }
-
 
 body {
   margin: 0;
@@ -19,92 +17,80 @@ body {
   color: var(--light-grey);
 }
 
-
+/* Top Navigation Bar */
 .app-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
 .sidebar {
-  width: clamp(12rem, 16vw, 14rem);
+  width: 100%;
   background-color: var(--mid-dark);
-  padding: 2rem 1rem;
+  padding: 1rem 2rem;
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  align-items: flex-start;
-  height:
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem; 
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .logo-image {
-  width: 40px;
-  height: auto;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-  filter: brightness(0) invert(1); 
+  filter: brightness(0) invert(1);
 }
 
 .sidebar-title {
   color: var(--white);
   font-family: var(--heading-font);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 2rem;
-  transform: translateY(20px);
+  margin: 0;
+  transform: none;
 }
 
 .auth-button {
   background-color: var(--teal-accent);
   color: var(--white);
-  padding: 0.75rem 1.5rem;
+  padding: 0.65rem 1.5rem;
   border-radius: 999px;
   font-weight: 500;
   text-decoration: none;
-  display: inline-block;
-  transition: background 0.3s ease;
-  transform: translateY(20px);
+  transition: all 0.3s ease;
+  transform: translateX(30px);
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
 }
 
 .auth-button:hover {
   background-color: #368079;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(69, 162, 158, 0.2);
 }
 
-
+/* Main Content */
 .main-content {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  flex-direction: column;
   text-align: center;
-}
-
-.welcome-container h2 {
-  font-family: var(--heading-font);
-  font-size: 2rem;
-  color: var(--white);
-  margin-bottom: 1rem;
-}
-
-.dashboard-link {
-  color: var(--teal-accent);
-  font-weight: 500;
-  text-decoration: none;
   margin-top: 1rem;
 }
 
-.dashboard-link:hover {
-  text-decoration: underline;
-}
-
+/* Rest of your existing styles remain unchanged */
 .hero-section {
   width: 100%;
   max-width: 720px;
@@ -117,19 +103,18 @@ body {
   color: var(--white);
   margin-bottom: 2rem;
   line-height: 1.2;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
+
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 800px; /* wider search bar */
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .search-input {
   width: 100%;
-  padding: 1.75rem 4rem 1.75rem 2rem; /* thicker bar */
+  padding: 1.75rem 4rem 1.75rem 2rem;
   border: none;
   border-radius: 999px;
   font-family: var(--body-font);
@@ -142,7 +127,7 @@ body {
 }
 
 .search-input:focus {
-  box-shadow: 0 0 0 3px var(--accent-color, #4A90E2);
+  box-shadow: 0 0 0 3px var(--teal-accent);
 }
 
 .search-button {
@@ -153,7 +138,7 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 36px; /* slightly bigger icon */
+  width: 36px;
   height: 36px;
   padding: 0;
   transition: transform 0.2s ease;
@@ -172,20 +157,11 @@ body {
   filter: brightness(0) invert(0.8);
 }
 
-.search-button:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-
-
 .tagline {
   margin-top: 1.5rem;
   font-size: 1.1rem;
   color: var(--light-grey);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
-
 
 .welcome-section {
   text-align: center;

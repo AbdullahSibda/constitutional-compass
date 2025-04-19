@@ -634,11 +634,5 @@ button, input, [role="button"] {
 .no-search-results .empty-text {
   font-size: 1.25rem;
   font-weight: 500;
-<<<<<<< HEAD
-  color: var(--white);
-  margin-bottom: 0.5rem;
-}
-=======
 }
 
->>>>>>> 6bb4e5570311bb6da504b9841a39c0b879d62dcd

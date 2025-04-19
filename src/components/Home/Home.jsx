@@ -34,13 +34,12 @@ const Home = () => {
         </header>
 
         {!user && (
-  <nav className="auth-container">
-  <Link to="/Login" className="auth-button">
-    Login In As/Become A Collaborator
-  </Link>
-</nav>
-)}
-
+          <nav className="auth-container">
+            <Link to="/Login" className="auth-button">
+              Login As/Become A Collaborator
+            </Link>
+          </nav>
+        )}
       </aside>
 
       <main className="main-content">
@@ -80,3 +79,4 @@ const Home = () => {
 };
 
 export default Home;
+
