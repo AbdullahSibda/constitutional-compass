@@ -540,3 +540,70 @@ button, input, [role="button"] {
   margin-left: 0.5rem;
   font-size: 0.9em;
 }
+
+/* Add to FolderBrowser.css */
+
+.search-container, .filter-input-container {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
+}
+
+.search-container input, .filter-input-container input {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--mid-dark);
+}
+
+.filter-container {
+  position: relative;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--dark-bg);
+  border: 1px solid var(--teal-accent);
+  border-radius: var(--border-radius);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.filter-dropdown button {
+  text-align: left;
+  padding: 0.25rem 0.5rem;
+}
+
+.active-search-button {
+  background-color: var(--teal-accent);
+  color: white;
+}
+
+.file-location {
+  font-size: 0.8em;
+  color: var(--teal-accent);
+  margin-left: 0.5rem;
+  font-style: italic;
+}
+
+.no-search-results {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.no-search-results .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-search-results .empty-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
