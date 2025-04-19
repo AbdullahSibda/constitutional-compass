@@ -1,7 +1,10 @@
 {
-    "navigationFallback": {
-      "rewrite": "/index.html",
-      "exclude": ["/static/*", "/*.css", "/*.js", "/favicon.ico", "/assets/*"]
-    }
+    "routes": [
+      {
+        "route": "/*",
+        "serve": "/index.html",
+        "statusCode": 200
+      }
+    ]
   }
   
