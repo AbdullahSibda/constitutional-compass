@@ -16,6 +16,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "cp staticwebapp.config.json build\\staticwebapp.config.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "eject": "react-scripts eject"
