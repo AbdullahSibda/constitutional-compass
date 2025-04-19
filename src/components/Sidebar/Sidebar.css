@@ -41,7 +41,7 @@
 
 .logo-image {
   width: clamp(2rem, 5vw, 2.25rem);
-  height: clamp(2rem, 5vw, 2.25rem);
+  height: autos;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
