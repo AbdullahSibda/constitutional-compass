@@ -17,108 +17,112 @@ body {
   color: var(--light-grey);
 }
 
-/* Top Navigation Bar */
+* {
+  box-sizing: border-box; /* Ensure padding/margins are included in height */
+}
+
 .app-container {
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  height: 100vh; /* Explicitly set to viewport height */
+  min-height: 100vh; /* Fallback for older browsers */
+  max-height: 100vh; /* Prevent scrolling */
+  overflow: hidden;
 }
 
-.sidebar {
-  width: 100%;
-  background-color: var(--mid-dark);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.logo-image {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
-.sidebar-title {
-  color: var(--white);
-  font-family: var(--heading-font);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  transform: none;
-}
-
-.auth-button {
-  background-color: var(--teal-accent);
-  color: var(--white);
-  padding: 0.65rem 1.5rem;
-  border-radius: 999px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  transform: translateX(30px);
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
-}
-
-.auth-button:hover {
-  background-color: #368079;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(69, 162, 158, 0.2);
-}
-
-/* Main Content */
 .main-content {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 2rem;
+  align-items: center !important; /* Force vertical centering */
+  padding: clamp(0.5rem, 2vw, 1rem);
   text-align: center;
-  margin-top: 1rem;
+  margin-left: 20rem;
+  height: 100%; /* Full height of app-container */
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
 }
 
-/* Rest of your existing styles remain unchanged */
+.sidebar.closed ~ .main-content {
+  margin-left: 0; /* Center horizontally when sidebar is closed */
+}
+
+.sidebar-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: var(--teal-accent);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  cursor: pointer;
+  z-index: 99;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background-color: #368079;
+}
+
 .hero-section {
   width: 100%;
-  max-width: 720px;
+  max-width: clamp(500px, 80vw, 720px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center children vertically */
+  align-items: center;
+  height: 100%; /* Take full height of main-content */
+  flex: 1; /* Grow to fill available space */
+  padding: 0;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+}
+
+.header-logo {
+  width: clamp(2rem, 5vw, 2.25rem);
+  height: clamp(2rem, 5vw, 2.25rem);
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.header-title {
+  font-family: var(--heading-font);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+  color: var(--white);
+  margin: 0;
 }
 
 .slogan {
   font-family: var(--heading-font);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
   font-weight: 600;
   color: var(--white);
-  margin-bottom: 2rem;
+  margin: 0 0 clamp(0.5rem, 1.5vw, 1rem);
   line-height: 1.2;
 }
 
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: clamp(400px, 80vw, 800px);
+  margin: 0 auto clamp(0.5rem, 1.5vw, 1rem);
 }
 
 .search-input {
   width: 100%;
-  padding: 1.75rem 4rem 1.75rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 4vw, 3rem) clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1.5rem);
   border: none;
   border-radius: 999px;
   font-family: var(--body-font);
-  font-size: 1.2rem;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
   background-color: var(--mid-dark);
   color: var(--white);
   outline: none;
@@ -133,13 +137,13 @@ body {
 .search-button {
   position: absolute;
   top: 50%;
-  right: 1.5rem;
+  right: clamp(0.75rem, 1.5vw, 1rem);
   transform: translateY(-50%);
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 36px;
-  height: 36px;
+  width: clamp(20px, 4vw, 28px);
+  height: clamp(20px, 4vw, 28px);
   padding: 0;
   transition: transform 0.2s ease;
 }
@@ -158,21 +162,21 @@ body {
 }
 
 .tagline {
-  margin-top: 1.5rem;
-  font-size: 1.1rem;
+  margin-top: clamp(0.5rem, 1vw, 0.75rem);
+  font-size: clamp(0.8rem, 2vw, 1rem);
   color: var(--light-grey);
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
 }
 
 .welcome-message {
   font-family: var(--heading-font);
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
   color: var(--white);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .dashboard-link {
@@ -180,11 +184,61 @@ body {
   font-weight: 500;
   text-decoration: none;
   display: inline-block;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
   transition: color 0.2s ease;
 }
 
 .dashboard-link:hover {
   color: #368079;
   text-decoration: underline;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+  width: 100%;
+  background-color: var(--dark-bg); 
+  color: var(--teal-accent); 
+  font-family: var(--heading-font); 
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 16rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 14rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+  .sidebar-toggle {
+    padding: 0.4rem 0.8rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    margin-left: 12rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+  .sidebar-toggle {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
+  }
 }

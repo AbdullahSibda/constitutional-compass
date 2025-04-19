@@ -1,50 +1,50 @@
 import React from "react";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Home from "./components/Home/Home";
-import Login from "./components/Login/Login";
 import Dashboard from "./components/Dashboard/Dashboard";
-import Prelogin from "./components/Login/prelogin"; // Updated import
+import Prelogin from "./components/Login/prelogin";
 
 // Create a layout component that wraps your routes
 const AppLayout = () => {
   return (
     <section className="App">
-      <Outlet /> {/* This renders the matched route */}
+      <Outlet />
     </section>
   );
 };
 
 // Create protected route wrapper
 const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
-  return user ? children : <Login />; // Use `children` prop instead of `element`
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  return user ? children : <Navigate to="/" replace />; // Redirect to home
 };
 
 // Define your routes
 const router = createBrowserRouter([
   {
-    element: <AppLayout />, // Main layout
+    element: <AppLayout />,
     children: [
       {
         path: "/",
-        element: <Home /> // Home page
+        element: <Home />
       },
       {
-        path: "/login",
-        element: <Login /> // Login page
+        path: "/home",
+        element: <Home />
       },
       {
         path: "/prelogin",
-        element: <Prelogin /> // Prelogin page (added route)
+        element: <Prelogin />
       },
       {
         path: "/dashboard",
         element: (
           <ProtectedRoute>
-            <Dashboard /> {/* Wrap protected component */}
+            <Dashboard />
           </ProtectedRoute>
-        ) // Protected Dashboard route
+        )
       },
     ]
   }
@@ -61,4 +61,3 @@ const App = () => {
 };
 
 export default App;
-

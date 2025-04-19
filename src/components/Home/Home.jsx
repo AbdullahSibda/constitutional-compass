@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import Sidebar from "../Sidebar/Sidebar";
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [ready, setReady] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,32 +20,29 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (user && ready) {
+    if (!loading && ready && user) {
       navigate("/dashboard");
     }
-  }, [user, ready, navigate]);
+  }, [user, ready, loading, navigate]);
 
-  if (!ready) return null;
+  if (loading || !ready) return <h2 className="loading">Loading...</h2>;
 
   return (
     <section className="app-container">
-      <aside className="sidebar">
-        <header className="sidebar-header">
-          <img src="/images/logo.png" alt="Logo" className="logo-image" />
-          <h1 className="sidebar-title">Constitutional Compass</h1>
-        </header>
-
-        {!user && (
-          <nav className="auth-container">
-            <Link to="/Login" className="auth-button">
-              Login As/Become A Collaborator
-            </Link>
-          </nav>
-        )}
-      </aside>
-
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <main className="main-content">
+        <button
+          className="sidebar-toggle"
+          onClick={() => setIsSidebarOpen(true)}
+          style={{ display: isSidebarOpen ? 'none' : 'block' }}
+        >
+          ☰
+        </button>
         <article className="hero-section">
+          <header className="home-header">
+            <img src="/images/logo.png" alt="Logo" className="header-logo" />
+            <h1 className="header-title">Constitutional Compass</h1>
+          </header>
           {user && (
             <section className="welcome-section">
               <h2 className="welcome-message">Welcome back, {user.email}</h2>
@@ -79,4 +78,3 @@ const Home = () => {
 };
 
 export default Home;
-

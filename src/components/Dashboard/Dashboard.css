@@ -1,22 +1,115 @@
-/* Dashboard.css */
-main {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@500;600&display=swap');
+
+:root {
+  --heading-font: 'Work Sans', sans-serif;
+  --body-font: 'Inter', sans-serif;
+  --dark-bg: #0B0C10;
+  --mid-dark: #1F2833;
+  --light-grey: #C5C6C7;
+  --teal-accent: #45A29E;
+  --white: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: var(--body-font);
+  background-color: var(--dark-bg);
+  color: var(--light-grey);
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
+  align-items: center;
+  padding: clamp(0.5rem, 2vw, 1rem);
+  margin-left: 20rem;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease;
 }
 
-header {
-  background-color: #282c34;
-  padding: 1rem;
-  color: white;
+.sidebar.closed ~ .main-content {
+  margin-left: 0;
+}
+
+.sidebar-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: var(--teal-accent);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  cursor: pointer;
+  z-index: 99;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background-color: #368079;
+}
+
+.dashboard-header {
   text-align: center;
+  margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
 }
 
-section[aria-label="File browser interface"] {
-  flex: 1;
-  padding: 1rem;
-  width: 80%;
+.dashboard-header h1 {
+  font-family: var(--heading-font);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+  color: var(--white);
+  margin: 0;
+}
+
+.folder-browser {
+  width: 100%;
+  max-width: clamp(500px, 80vw, 720px);
   margin: 0 auto;
-  background-color: transparent;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 16rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 14rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+  .sidebar-toggle {
+    padding: 0.4rem 0.8rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    margin-left: 12rem;
+  }
+  .sidebar.closed ~ .main-content {
+    margin-left: 0;
+  }
+  .sidebar-toggle {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
+  }
 }

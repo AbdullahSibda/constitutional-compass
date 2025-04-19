@@ -8,12 +8,14 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -22,6 +24,7 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -32,17 +35,26 @@ export function AuthProvider({ children }) {
     window.location.hostname === "localhost"
       ? "http://localhost:3000"
       : "https://wonderful-river-0d8fbf010.6.azurestaticapps.net";
-      const signIn = () =>
-        supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${siteUrl}/prelogin`, // 👈 redirect directly here after login
-          },
-        });
-  const signOut = () => supabase.auth.signOut();
+
+  const signIn = () =>
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${siteUrl}/dashboard`,
+      },
+    });
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      window.location.href = `${siteUrl}/`;
+    } catch (error) {
+      console.error('Sign Out Error:', error);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ session, user, signIn, signOut, supabase }}>
+    <AuthContext.Provider value={{ session, user, signIn, signOut, supabase, loading }}>
       {children}
     </AuthContext.Provider>
   );
