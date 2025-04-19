@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../contexts/client';
 import { useAuth } from '../../contexts/AuthContext';
-import PropTypes from 'prop-types';
 import './Edit.css';
 
 const documentOptions = {

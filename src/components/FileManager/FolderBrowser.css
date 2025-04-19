@@ -440,3 +440,103 @@ button, input, [role="button"] {
   text-align: center;
   padding: 0.5rem;
 }
+
+.context-menu-item.move {
+  color: #4CAF50;
+}
+
+.context-menu-item.move:hover {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.move-button {
+  background-color: var(--teal-accent);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.move-button:hover:not([disabled]) {
+  background-color: #368079;
+  transform: translateY(-1px);
+}
+
+.move-button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--mid-dark);
+}
+
+.browser-item.moving {
+  position: relative;
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 1px dashed var(--teal-accent);
+}
+
+.browser-item.moving::after {
+  content: "Moving...";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--teal-accent);
+}
+
+.cancel-move-button {
+  background-color: #d32f2f;
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.cancel-move-button:hover {
+  background-color: #b71c1c;
+}
+
+@media (max-width: 768px) {
+  .move-button,
+  .cancel-move-button {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.breadcrumb-item.move-target {
+  background-color: rgba(76, 175, 80, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+.moving-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.moving-disabled::after {
+  content: " (Moving)";
+  color: var(--teal-accent);
+}
+
+.moving-indicator {
+  color: var(--teal-accent);
+  margin-left: 0.5rem;
+  font-size: 0.9em;
+}

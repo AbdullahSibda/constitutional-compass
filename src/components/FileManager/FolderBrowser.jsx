@@ -24,6 +24,7 @@ export default function FolderBrowser() {
     show: false,
     item: null
   });
+  const [movingItem, setMovingItem] = useState(null);
 
   // Fetch folder contents
   useEffect(() => {
@@ -66,12 +67,12 @@ export default function FolderBrowser() {
   }, [currentFolder, showUploadForm]);
 
   const navigateToFolder = (folderId, folderName) => {
-    if (showUploadForm) return;
+    if (showUploadForm || (movingItem && movingItem.id === folderId)) return;
     setCurrentFolder(folderId);
     setPath([...path, { id: folderId, name: folderName }]);
   };
 
-  const ContextMenu = ({ item, onEdit, onDelete, onUndoDelete, onDownload, onClose, isDeleted }) => {
+  const ContextMenu = ({ item, onEdit, onDelete, onUndoDelete, onDownload, onMove, onClose, isDeleted }) => {
     return (
       <dialog
         className="context-menu-overlay"
@@ -109,6 +110,17 @@ export default function FolderBrowser() {
           )}
           <li>
             <button 
+              className="context-menu-item"
+              onClick={() => {
+                onMove();
+                onClose();
+              }}
+              >
+                Move
+            </button>
+          </li>
+          <li>
+            <button 
               className="context-menu-item delete"
               onClick={() => {
                 isDeleted ? onUndoDelete() : onDelete();
@@ -121,6 +133,43 @@ export default function FolderBrowser() {
         </menu>
       </dialog>
     );
+  };
+
+  const isDescendant = (folderId, potentialParentId) => {
+    if (folderId === potentialParentId) return true;
+    const parent = contents.find(item => item.id === potentialParentId);
+    if (!parent || !parent.parent_id) return false;
+    return isDescendant(folderId, parent.parent_id);
+  };
+
+  const handleMoveHere = async () => {
+    if (!movingItem) return;
+
+    if (movingItem.is_folder && isDescendant(currentFolder, movingItem.id)) {
+      setError("Cannot move a folder into its own subfolder");
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+  
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ 
+          parent_id: currentFolder === '00000000-0000-0000-0000-000000000000' ? null : currentFolder
+        })
+        .eq('id', movingItem.id);
+  
+      if (error) throw error;
+  
+      refreshContents();
+      setMovingItem(null);
+    } catch (err) {
+      setError('Failed to move item: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContextMenu = (e, item) => {
@@ -237,17 +286,21 @@ export default function FolderBrowser() {
         .insert({
           name: newFolderName,
           is_folder: true,
-          parent_id: currentFolder === 'root' ? null : currentFolder,
+          parent_id: currentFolder === '00000000-0000-0000-0000-000000000000' ? null : currentFolder,
           created_by: user.id,
           metadata: { type: 'folder' },
           is_deleted: false
-        });
+        })
+        .select();
 
       if (insertError) throw insertError;
 
       setShowCreateFolder(false);
       setNewFolderName('');
-      refreshContents();
+      setCurrentFolder(prev => {
+        refreshContents();
+        return prev;
+      });
     } catch (err) {
       console.error('Error creating folder:', err);
       setError(err.message);
@@ -263,7 +316,8 @@ export default function FolderBrowser() {
         .from('documents')
         .select('*')
         .order('is_folder', { ascending: false })
-        .order('name');
+        .order('name')
+        .eq('is_deleted', false);
 
       if (currentFolder === '00000000-0000-0000-0000-000000000000') {
         query = query.is('parent_id', null);
@@ -348,6 +402,30 @@ export default function FolderBrowser() {
             </button>
           </li>
         )}
+        {movingItem && (
+          <li>
+            <button
+              onClick={handleMoveHere}
+              disabled={loading || currentFolder === '00000000-0000-0000-0000-000000000000' ||
+                (movingItem.is_folder && isDescendant(currentFolder, movingItem.id))
+              }
+              className='move-button'
+            >
+              Move Here
+            </button>
+          </li>
+        )}
+        {movingItem && (
+          <li>
+            <button 
+              onClick={() => setMovingItem(null)}
+              disabled={loading}
+              className="cancel-button"
+            >
+              Cancel Move
+            </button>
+          </li>
+        )}
       </menu>
 
       {!showUploadForm && showCreateFolder && (
@@ -401,8 +479,8 @@ export default function FolderBrowser() {
                   <li key={item.id} className="browser-item-container">
                     <article className={`browser-item ${item.is_folder ? 'folder' : 'file'}`}>
                       <button
-                        className="item-main-action"
-                        disabled={loading}
+                        className={`item-main-action ${movingItem?.id === item.id ? 'moving-disabled' : ''}`}
+                        disabled={loading || (movingItem && movingItem.id === item.id)}
                         onClick={() => {
                           if (item.is_folder) {
                             navigateToFolder(item.id, item.name);
@@ -460,6 +538,10 @@ export default function FolderBrowser() {
           onDelete={() => softDeleteItem(contextMenu.item)}
           onUndoDelete={() => undoDelete(contextMenu.item)}
           onDownload={() => handleDownload(contextMenu.item)}
+          onMove={() =>{
+            setMovingItem(contextMenu.item);
+            closeContextMenu();
+          }}
           isDeleted={deletedItems.has(contextMenu.item?.id)}
           onClose={closeContextMenu}
         />
