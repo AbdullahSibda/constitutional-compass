@@ -546,7 +546,7 @@ export default function FolderBrowser() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search files in this folder and subfolders..."
+            placeholder="Search files in this folder ..."
             disabled={loading}
           />
           <button onClick={handleSearch} disabled={loading}>Search</button>\

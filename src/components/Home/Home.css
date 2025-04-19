@@ -120,39 +120,43 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
-
 .search-container {
   position: relative;
-  width: 80%;
-  max-width: 600px; 
+  width: 100%;
+  max-width: 800px; /* wider search bar */
   margin: 0 auto;
 }
 
 .search-input {
   width: 100%;
-  padding: 1.25rem 3.5rem 1.25rem 2rem;
+  padding: 1.75rem 4rem 1.75rem 2rem; /* thicker bar */
   border: none;
-  border-radius: 2rem;
+  border-radius: 999px;
   font-family: var(--body-font);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   background-color: var(--mid-dark);
   color: var(--white);
   outline: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.2s ease;
 }
 
-
+.search-input:focus {
+  box-shadow: 0 0 0 3px var(--accent-color, #4A90E2);
+}
 
 .search-button {
   position: absolute;
-  right: 1rem; 
   top: 50%;
-  transform: translateY(-50%) translateX(+240%);
+  right: 1.5rem;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 36px; 
-  height: 36px; 
-  transition: all 0.2s ease; 
+  width: 36px; /* slightly bigger icon */
+  height: 36px;
+  padding: 0;
+  transition: transform 0.2s ease;
 }
 
 .search-button img {
@@ -160,25 +164,19 @@ body {
   height: 100%;
   object-fit: contain;
   filter: brightness(0) invert(1);
-  transition: transform 0.2s ease; 
+  transition: transform 0.2s ease;
 }
 
-/* This is UI element to show when user is hovered over search button*/
 .search-button:hover img {
-  transform: scale(1.1); 
-  filter: brightness(0) invert(0.8); 
+  transform: scale(1.1);
+  filter: brightness(0) invert(0.8);
 }
 
-/*  Animation when clicking search */
 .search-button:active {
-  transform: translateY(-50%) scale(0.95); 
+  transform: translateY(-50%) scale(0.95);
 }
 
 
-.search-input {
-  width: 100%;
-  padding: 1.25rem 5rem 1.25rem 2rem; 
-}
 
 .tagline {
   margin-top: 1.5rem;
