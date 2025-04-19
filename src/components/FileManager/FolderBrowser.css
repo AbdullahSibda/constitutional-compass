@@ -14,11 +14,10 @@
   margin: 0 auto;
 }
 
-/* Improved breadcrumbs */
 .breadcrumbs {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap:wrap;
   gap: 0;
   margin-bottom: 1.5rem;
   
@@ -54,9 +53,9 @@
 
 .breadcrumb-separator {
   color: var(--teal-accent);
-  padding: 0 0.25rem;
   user-select: none;
   font-weight: bold;
+  padding-left: 5em;
   margin: 0 -0.125rem;
 }
 
@@ -635,6 +634,11 @@ button, input, [role="button"] {
 .no-search-results .empty-text {
   font-size: 1.25rem;
   font-weight: 500;
+<<<<<<< HEAD
   color: var(--white);
   margin-bottom: 0.5rem;
 }
+=======
+}
+
+>>>>>>> 6bb4e5570311bb6da504b9841a39c0b879d62dcd

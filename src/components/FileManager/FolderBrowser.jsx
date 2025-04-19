@@ -408,7 +408,7 @@ export default function FolderBrowser() {
             {item.name}
           </button>
           {index < path.length - 1 && (
-            <strong className="breadcrumb-separator" aria-hidden="true">>></strong>
+            <strong className="breadcrumb-separator" aria-hidden="true">{'>>'}</strong>
           )}
         </figure>
       ))}
