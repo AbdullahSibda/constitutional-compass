@@ -118,7 +118,6 @@ export default function FolderBrowser() {
           *,
           parentFolder:parent_id(name)
         `)
-        .eq('is_deleted', false)
         .eq('is_folder', false)
         .or(
           `metadata->>displayName.ilike.%${searchQuery}%,` +
@@ -192,8 +191,7 @@ export default function FolderBrowser() {
         .from('documents')
         .select('id')
         .eq('parent_id', currentId)
-        .eq('is_folder', true)
-        .eq('is_deleted', false);
+        .eq('is_folder', true);
       if (error) {
         console.error('Error fetching subfolder IDs:', error);
         throw error;
@@ -361,8 +359,7 @@ export default function FolderBrowser() {
         .from('documents')
         .select('*')
         .order('is_folder', { ascending: false })
-        .order('name')
-        .eq('is_deleted', false);
+        .order('name');
       if (currentFolder === '00000000-0000-0000-0000-000000000000') {
         query = query.is('parent_id', null);
       } else {
