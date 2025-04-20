@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 
 const Home = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const [ready, setReady] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'test') {
@@ -18,12 +17,6 @@ const Home = () => {
     const timeout = setTimeout(() => setReady(true), 400);
     return () => clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    if (!loading && ready && user) {
-      navigate("/dashboard");
-    }
-  }, [user, ready, loading, navigate]);
 
   if (loading || !ready) return <h2 className="loading">Loading...</h2>;
 
@@ -45,10 +38,12 @@ const Home = () => {
           </header>
           {user && (
             <section className="welcome-section">
-              <h2 className="welcome-message">Welcome back, {user.email}</h2>
-              <Link to="/dashboard" className="dashboard-link">
-                Go to Dashboard →
-              </Link>
+              <h2 className="welcome-message">Welcome, {user.email}</h2>
+              {(userRole === 'admin' || userRole === 'moderator') && (
+                <Link to="/dashboard" className="dashboard-link">
+                  Go to Dashboard →
+                </Link>
+              )}
             </section>
           )}
 

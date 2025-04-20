@@ -1,0 +1,32 @@
+/* AuthCallback.css */
+.auth-callback-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--dark-bg);
+    padding: 1rem;
+  }
+  
+  .auth-callback-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  .auth-callback-message {
+    font-family: var(--body-font);
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    color: var(--light-grey);
+    margin: 0;
+  }
+    
+  @media (max-width: 480px) {
+    .auth-callback-content {
+      gap: 1rem;
+    }
+  }

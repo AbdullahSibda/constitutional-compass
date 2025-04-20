@@ -101,6 +101,39 @@
   box-shadow: 0 2px 8px rgba(69, 162, 158, 0.2);
 }
 
+/* Add to your existing Sidebar.css */
+.application-status {
+  padding: 1rem;
+  margin-top: auto;
+  border-top: 1px solid var(--dark-bg);
+  color: var(--light-grey);
+}
+
+.application-status h3 {
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--light-grey);
+}
+
+.application-status .status {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  margin: 0;
+}
+
+.application-status .status.pending {
+  color: #FFA500;
+}
+
+.application-status .status.rejected {
+  color: #FF5252; 
+}
+
+.application-status .status.accepted {
+  color: var(--teal-accent); 
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     width: 16rem;

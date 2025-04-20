@@ -3,9 +3,10 @@ import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-rou
 import { useAuth } from "./contexts/AuthContext";
 import Home from "./components/Home/Home";
 import Dashboard from "./components/Dashboard/Dashboard";
-import Prelogin from "./components/Login/prelogin";
+import PostLogin from "./components/Login/PostLogin";
+import AuthCallback from "./components/Auth/AuthCallback";
+import Applications from "./components/Applications/Applications";
 
-// Create a layout component that wraps your routes
 const AppLayout = () => {
   return (
     <section className="App">
@@ -14,14 +15,12 @@ const AppLayout = () => {
   );
 };
 
-// Create protected route wrapper
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  return user ? children : <Navigate to="/" replace />; // Redirect to home
+  if (loading) return <h2>Loading...</h2>;
+  return user ? children : <Navigate to="/" replace />;
 };
 
-// Define your routes
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -35,8 +34,12 @@ const router = createBrowserRouter([
         element: <Home />
       },
       {
-        path: "/prelogin",
-        element: <Prelogin />
+        path: "/auth-callback",
+        element: <AuthCallback />
+      },
+      {
+        path: "/PostLogin",
+        element: <PostLogin />
       },
       {
         path: "/dashboard",
@@ -46,6 +49,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         )
       },
+      {
+        path: "/applications",
+        element: (
+          <ProtectedRoute>
+            <Applications />
+          </ProtectedRoute>
+        )
+      }
     ]
   }
 ], {
@@ -55,7 +66,6 @@ const router = createBrowserRouter([
   }
 });
 
-// Main App component
 const App = () => {
   return <RouterProvider router={router} />;
 };
