@@ -1,11 +1,13 @@
-import React, { useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import Sidebar from "../Sidebar/Sidebar";
 
 const Home = () => {
-  const { user, signIn } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const [ready, setReady] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'test') {
@@ -16,33 +18,33 @@ const Home = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  if (!ready) return null;
+  if (loading || !ready) return <h2 className="loading">Loading...</h2>;
 
   return (
     <section className="app-container">
-      <aside className="sidebar">
-        <header className="sidebar-header">
-          <img src="/images/logo.png" alt="Logo" className="logo-image" />
-          <h1 className="sidebar-title">Constitutional Compass</h1>
-        </header>
-
-        {!user && (
-          <nav className="auth-container">
-            <button onClick={signIn} className="auth-button">
-              Login as Admin
-            </button>
-          </nav>
-        )}
-      </aside>
-
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <main className="main-content">
+        <button
+          data-testid="sidebar-toggle"
+          className="sidebar-toggle"
+          onClick={() => setIsSidebarOpen(true)}
+          style={{ display: isSidebarOpen ? 'none' : 'block' }}
+        >
+          ☰
+        </button>
         <article className="hero-section">
+          <header className="home-header">
+            <img src="/images/logo.png" alt="Logo" className="header-logo" />
+            <h1 className="header-title">Constitutional Compass</h1>
+          </header>
           {user && (
             <section className="welcome-section">
-              <h2 className="welcome-message">Welcome back, {user.email}</h2>
-              <Link to="/dashboard" className="dashboard-link">
-                Go to Dashboard →
-              </Link>
+              <h2 className="welcome-message">Welcome, {user.email}</h2>
+              {(userRole === 'admin' || userRole === 'moderator') && (
+                <Link to="/dashboard" className="dashboard-link">
+                  Go to Dashboard →
+                </Link>
+              )}
             </section>
           )}
 
