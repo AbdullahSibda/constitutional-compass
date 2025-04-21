@@ -20,7 +20,7 @@
 - Fix all test failures before pushing  
 
 ## Team Rules  
-- Discuss uncertainties in group chat first  
+- Discuss uncertainties in the group chat first  
 - Verify tests pass before any push to `dev`  
 
 ## Backend Rules
