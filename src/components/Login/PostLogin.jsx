@@ -30,13 +30,13 @@ const PostLogin = () => {
     setIsSubmitting(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (error || !user) {
         throw new Error("User not authenticated");
       }
 
-      const { error } = await supabase
+      const { error: upsertError } = await supabase
         .from('user_profiles')
         .upsert({
           id: user.id,
@@ -45,7 +45,7 @@ const PostLogin = () => {
           applied_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (upsertError) throw upsertError;
 
       alert("Application submitted successfully! You'll be notified once approved.");
       navigate("/");
@@ -86,7 +86,7 @@ const PostLogin = () => {
             </li>
           </menu>
         ) : (
-          <form className="application-form" onSubmit={(e) => {
+          <form className="application-form" aria-label="Admin application form" onSubmit={(e) => {
             e.preventDefault();
             submitApplication();
           }}>

@@ -9,7 +9,7 @@ import Applications from "./components/Applications/Applications";
 
 const AppLayout = () => {
   return (
-    <section className="App">
+    <section className="App" aria-label="application content">
       <Outlet />
     </section>
   );
@@ -70,4 +70,5 @@ const App = () => {
   return <RouterProvider router={router} />;
 };
 
+export {AppLayout, ProtectedRoute};
 export default App;

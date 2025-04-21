@@ -6,7 +6,7 @@ import Edit from './Edit';
 import ContextMenu from './ContextMenu';
 import './FolderBrowser.css';
 
-export default function FolderBrowser() {
+function FolderBrowser() {
   const { user } = useAuth();
   const [currentFolder, setCurrentFolder] = useState('00000000-0000-0000-0000-000000000000');
   const [contents, setContents] = useState([]);
@@ -38,7 +38,7 @@ export default function FolderBrowser() {
           .from('documents')
           .select('*')
           .order('is_folder', { ascending: false })
-          .order('name');
+          .order('name', {ascending: true});
         if (currentFolder === '00000000-0000-0000-0000-000000000000') {
           query = query.is('parent_id', null);
         } else {
@@ -46,9 +46,10 @@ export default function FolderBrowser() {
         }
         const { data, error: queryError } = await query;
         if (queryError) throw queryError;
+        const validData = Array.isArray(data) ? data : [];
         const deletedIds = new Set(data.filter(item => item.is_deleted).map(item => item.id));
         setDeletedItems(deletedIds);
-        setContents(data || []);
+        setContents(validData);
       } catch (err) {
         console.error('Error fetching contents:', err);
         setError(err.message);
@@ -658,7 +659,7 @@ export default function FolderBrowser() {
   );
 }
 
-function ContentsDisplay({ contents, loading, showSearch, movingItem, navigateToFolder, handleFileDoubleClick, handleContextMenu, contextMenu, filterCriteria }) {
+export function ContentsDisplay({ contents, loading, showSearch, movingItem, navigateToFolder, handleFileDoubleClick, handleContextMenu, contextMenu, filterCriteria }) {
   if (loading) {
     return <p className="loading-indicator">Loading contents...</p>;
   }
@@ -726,3 +727,5 @@ function ContentsDisplay({ contents, loading, showSearch, movingItem, navigateTo
     </article>
   );
 }
+
+export default FolderBrowser;
