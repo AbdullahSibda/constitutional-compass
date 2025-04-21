@@ -1,29 +1,74 @@
 import React from "react";
-// eslint-disable-next-line no-unused-vars
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Home from "./components/Home/Home";
-import Login from "./components/Login/Login";
 import Dashboard from "./components/Dashboard/Dashboard";
+import PostLogin from "./components/Login/PostLogin";
+import AuthCallback from "./components/Auth/AuthCallback";
+import Applications from "./components/Applications/Applications";
 
-
-const App = () => {
-  const { user } = useAuth();
-
+const AppLayout = () => {
   return (
-    <section className="App">
-      {/* Main content goes here */}
-      <Routes>
-        {/* Define your routes here */}
-        <Route path="/" element={<Home />} />
-        {/* <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} /> */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={user ? <Dashboard /> : <Login />} />
-        {/* Add more routes as needed */}
-      </Routes>
+    <section className="App" aria-label="application content">
+      <Outlet />
     </section>
   );
 };
 
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <h2>Loading...</h2>;
+  return user ? children : <Navigate to="/" replace />;
+};
+
+const router = createBrowserRouter([
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      },
+      {
+        path: "/home",
+        element: <Home />
+      },
+      {
+        path: "/auth-callback",
+        element: <AuthCallback />
+      },
+      {
+        path: "/PostLogin",
+        element: <PostLogin />
+      },
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/applications",
+        element: (
+          <ProtectedRoute>
+            <Applications />
+          </ProtectedRoute>
+        )
+      }
+    ]
+  }
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+});
+
+const App = () => {
+  return <RouterProvider router={router} />;
+};
+
+export {AppLayout, ProtectedRoute};
 export default App;

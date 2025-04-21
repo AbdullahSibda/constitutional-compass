@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@500;600&display=swap');
+
+:root {
+  --heading-font: 'Work Sans', sans-serif;
+  --body-font: 'Inter', sans-serif;
+  --dark-bg: #0B0C10;
+  --mid-dark: #1F2833;
+  --light-grey: #C5C6C7;
+  --teal-accent: #45A29E;
+  --white: #ffffff;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 20rem; /* Default width for desktop */
+  max-width: 80vw; /* Limit width on smaller screens */
+  background-color: var(--mid-dark);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  transition: width 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+}
+
+.sidebar.closed {
+  width: 0;
+  transform: translateX(-100%);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.logo-image {
+  width: clamp(2rem, 5vw, 2.25rem);
+  height: autos;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.sidebar-title {
+  color: var(--white);
+  font-family: var(--heading-font);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 600;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nav-link {
+  color: var(--light-grey);
+  font-family: var(--body-font);
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--white);
+  background-color: var(--teal-accent);
+}
+
+.auth-button.google-signin {
+  background-color: var(--teal-accent);
+  color: var(--white);
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-family: var(--body-font);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.auth-button.google-signin:hover {
+  background-color: #368079;
+  box-shadow: 0 2px 8px rgba(69, 162, 158, 0.2);
+}
+
+/* Add to your existing Sidebar.css */
+.application-status {
+  padding: 1rem;
+  margin-top: auto;
+  border-top: 1px solid var(--dark-bg);
+  color: var(--light-grey);
+}
+
+.application-status h3 {
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--light-grey);
+}
+
+.application-status .status {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  margin: 0;
+}
+
+.application-status .status.pending {
+  color: #FFA500;
+}
+
+.application-status .status.rejected {
+  color: #FF5252; 
+}
+
+.application-status .status.accepted {
+  color: var(--teal-accent); 
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 16rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 14rem;
+    padding: 0.75rem;
+  }
+  .sidebar-header {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 12rem;
+    padding: 0.5rem;
+  }
+  .nav-link,
+  .auth-button.google-signin {
+    padding: 0.5rem;
+  }
+}

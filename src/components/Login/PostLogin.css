@@ -1,0 +1,178 @@
+/* PostLogin.css */
+.postlogin-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--dark-bg);
+  padding: 1rem;
+}
+
+.postlogin-popup {
+  background: var(--mid-dark);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: clamp(300px, 90vw, 500px);
+}
+
+.postlogin-title {
+  font-family: var(--heading-font);
+  font-size: clamp(1.5rem, 6vw, 2rem);
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 0.5rem;
+}
+
+.postlogin-subtext {
+  font-family: var(--body-font);
+  font-size: clamp(0.9rem, 3vw, 1.1rem);
+  color: var(--light-grey);
+  margin-bottom: clamp(1rem, 4vw, 1.5rem);
+}
+
+.postlogin-buttons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.postlogin-buttons li {
+  margin: 0;
+}
+
+.continue-button, 
+.apply-button,
+.submit-button,
+.cancel-button {
+  width: 100%;
+  padding: clamp(0.75rem, 3vw, 1rem);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--body-font);
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.continue-button {
+  background-color: var(--teal-accent);
+  color: var(--white);
+}
+
+.continue-button:hover {
+  background-color: #368079;
+  transform: translateY(-2px);
+}
+
+.apply-button {
+  background-color: var(--mid-dark);
+  color: var(--teal-accent);
+  border: 2px solid var(--teal-accent);
+}
+
+.apply-button:hover {
+  background-color: rgba(69, 162, 158, 0.1);
+  transform: translateY(-2px);
+}
+
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reason-input {
+  width: 100%;
+  padding: clamp(0.75rem, 3vw, 1rem);
+  border: 2px solid var(--light-grey);
+  border-radius: 8px;
+  background-color: var(--dark-bg);
+  color: var(--white);
+  font-family: var(--body-font);
+  font-size: clamp(0.9rem, 3vw, 1rem);
+  resize: vertical;
+  min-height: 120px;
+}
+
+.reason-input:focus {
+  outline: none;
+  border-color: var(--teal-accent);
+  box-shadow: 0 0 0 3px rgba(69, 162, 158, 0.3);
+}
+
+.form-buttons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.form-buttons li {
+  flex: 1;
+}
+
+.submit-button {
+  background-color: var(--teal-accent);
+  color: var(--white);
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #368079;
+  transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background-color: transparent;
+  color: var(--light-grey);
+  border: 2px solid var(--light-grey);
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: rgba(197, 198, 199, 0.1);
+  transform: translateY(-2px);
+}
+
+.cancel-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (max-width: 480px) {
+  .postlogin-popup {
+    padding: 1.25rem;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .form-buttons li {
+    width: 100%;
+  }
+}
