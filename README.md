@@ -3,7 +3,7 @@
 ## Branch Rules  
 - For each sprint, make a new branch and push all code to that
 - At the end of the sprint, merge with `dev` branch  
-- Never push directly to `main`  
+- Never push directly to `main` unless triggering deployment to Azure
 - Tests must pass before merging  
 
 ## Setup Commands  
