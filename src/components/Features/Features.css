@@ -1,62 +1,61 @@
 .features-section {
-    padding: 2rem 1rem;
-    background-color: #1F2833;
-  }
-  
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.5rem, 2vw, 1rem);
+  background-color: var(--dark-bg);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.features-container {
+  max-width: min(900px, 90vw);
+  margin: 0 auto;
+  background-color: var(--mid-dark);
+  border-radius: 12px;
+  padding: clamp(1rem, 3vw, 2rem);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.features-title {
+  text-align: center;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+  color: var(--white);
+  font-family: var(--heading-font);
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list > li {
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+.feature-list h2 {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  margin-bottom: 0.75rem;
+  color: var(--teal-accent);
+  font-family: var(--heading-font);
+}
+
+.feature-list ul {
+  list-style-type: disc;
+  padding-left: clamp(1rem, 3vw, 1.5rem);
+}
+
+.feature-list li li {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  margin-bottom: 0.5rem;
+  color: var(--light-grey);
+  line-height: 1.5;
+  font-family: var(--body-font);
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
   .features-container {
-    max-width: 900px;
-    margin: 0 auto;
-    background-color: #C5C6C7;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    padding: clamp(1rem, 3vw, 1.5rem);
   }
-  
-  .features-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    color: black;
-  }
-  
-  .feature-list {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .feature-list > li {
-    margin-bottom: 2rem;
-  }
-  
-  .feature-list h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    color: #1a1a1a;
-  }
-  
-  .feature-list ul {
-    list-style-type: disc;
-    padding-left: 1.5rem;
-  }
-  
-  .feature-list li li {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    color: #444;
-  }
-  
-  /* Responsive tweaks */
-  @media (max-width: 600px) {
-    .features-title {
-      font-size: 1.5rem;
-    }
-  
-    .feature-list h2 {
-      font-size: 1.25rem;
-    }
-  
-    .features-container {
-      padding: 1.5rem 1rem;
-    }
-  }
-  
+}

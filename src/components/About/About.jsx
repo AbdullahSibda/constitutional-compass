@@ -1,6 +1,5 @@
-import React from 'react';
 import "./About.css";
-import { useState } from "react";
+import { useState, React } from "react";
 import Sidebar from "../Sidebar/Sidebar";
 
 function About() {
