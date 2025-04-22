@@ -25,6 +25,7 @@ const Home = () => {
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <main className="main-content">
         <button
+          data-testid="sidebar-toggle"
           className="sidebar-toggle"
           onClick={() => setIsSidebarOpen(true)}
           style={{ display: isSidebarOpen ? 'none' : 'block' }}

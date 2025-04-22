@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../contexts/client';
 import './Sidebar.css';
+import logo from '../images/logo.png';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const { user, signIn, signOut, userRole } = useAuth();
@@ -65,7 +66,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <aside ref={sidebarRef} className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <section className="sidebar-header">
-        <img src="/images/logo.png" alt="Logo" className="logo-image" />
+        <img src={logo} alt="Logo" className="logo-image" />
         <h1 className="sidebar-title">Constitutional Compass</h1>
       </section>
       <nav className="sidebar-nav">

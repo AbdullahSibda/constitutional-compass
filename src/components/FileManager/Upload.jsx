@@ -152,6 +152,7 @@ export default function Upload({
       setSuccess(true);
       setFile(null);
       setMetadata({
+        displayName: '',
         documentType: '',
         year: '',
         author: ''
@@ -182,7 +183,7 @@ export default function Upload({
     <section className="upload-container">
       <h2>Upload Document</h2>
       
-      <form onSubmit={handleUpload} className="upload-form">
+      <form onSubmit={handleUpload} className="upload-form" aria-label="Upload document form">
         <fieldset className="file-selection">
           <legend>File Selection</legend>
           <label htmlFor="file-upload" className="file-upload-label">

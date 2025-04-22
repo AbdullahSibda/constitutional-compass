@@ -333,7 +333,7 @@ const documentOptions = {
           role="document"
         >
           <h2 id="edit-modal-title">Edit {item.is_folder ? 'Folder' : 'Metadata'}</h2>
-          <form onSubmit={handleSubmit} className="edit-form" noValidate>
+          <form onSubmit={handleSubmit} className="edit-form" noValidate role="form">
             <fieldset className="metadata-fields" disabled={loading}>
               {item.is_folder ? renderFolderForm() : renderDocumentForm()}
             </fieldset>
