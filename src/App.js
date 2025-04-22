@@ -6,6 +6,8 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import PostLogin from "./components/Login/PostLogin";
 import AuthCallback from "./components/Auth/AuthCallback";
 import Applications from "./components/Applications/Applications";
+import About from "./components/About/About";
+import Features from "./components/Features/Features";
 
 const AppLayout = () => {
   return (
@@ -18,7 +20,7 @@ const AppLayout = () => {
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <h2>Loading...</h2>;
-  return user ? children : <Navigate to="/" replace />;
+  return user ? children : <Navigate to="/" replace />;//start
 };
 
 const router = createBrowserRouter([
@@ -32,6 +34,14 @@ const router = createBrowserRouter([
       {
         path: "/home",
         element: <Home />
+      },
+      {
+        path: "/about",
+        element: <About />
+      },
+      {
+        path: "/features",
+        element: <Features />
       },
       {
         path: "/auth-callback",
