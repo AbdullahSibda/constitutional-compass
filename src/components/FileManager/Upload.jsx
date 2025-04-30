@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { supabase } from '../../contexts/client';
-import { useAuth } from '../../contexts/AuthContext';
-import './Upload.css';
+import { useState } from "react";
+import { supabase } from "../../contexts/client";
+import { useAuth } from "../../contexts/AuthContext";
+import "./Upload.css";
 
-export default function Upload({ 
-  parentId = '00000000-0000-0000-0000-000000000000',
+export default function Upload({
+  parentId = "00000000-0000-0000-0000-000000000000",
   onUploadSuccess,
-  disabled 
+  disabled,
 }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,10 +16,12 @@ export default function Upload({
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("");
 
-
   const documentOptions = {
     constitutional: [
-      { value: "constitution_1996", label: "Constitution of South Africa (1996)" },
+      {
+        value: "constitution_1996",
+        label: "Constitution of South Africa (1996)",
+      },
       { value: "interim_constitution", label: "Interim Constitution (1993)" },
       { value: "constitutional_amendment", label: "Constitutional Amendment" },
       { value: "bill_of_rights", label: "Bill of Rights" },
@@ -35,15 +37,24 @@ export default function Upload({
     ],
     judicial: [
       { value: "constitutional_court", label: "Constitutional Court Ruling" },
-      { value: "supreme_court_appeal", label: "Supreme Court of Appeal Decision" },
+      {
+        value: "supreme_court_appeal",
+        label: "Supreme Court of Appeal Decision",
+      },
       { value: "high_court", label: "High Court Decision" },
       { value: "magistrate_ruling", label: "Magistrate Court Ruling" },
       { value: "legal_opinion", label: "Legal Opinion" },
     ],
     human_rights: [
-      { value: "south_african_hr_commission", label: "SA Human Rights Commission Report" },
+      {
+        value: "south_african_hr_commission",
+        label: "SA Human Rights Commission Report",
+      },
       { value: "udhr", label: "Universal Declaration of Human Rights" },
-      { value: "african_charter", label: "African Charter on Human and Peoples' Rights" },
+      {
+        value: "african_charter",
+        label: "African Charter on Human and Peoples' Rights",
+      },
       { value: "iccpr", label: "ICCPR Document" },
       { value: "icescr", label: "ICESCR Document" },
       { value: "cedaw", label: "CEDAW Document" },
@@ -53,7 +64,10 @@ export default function Upload({
       { value: "freedom_charter", label: "Freedom Charter (1955)" },
       { value: "rivieraconference", label: "Rivonia Trial Documents" },
       { value: "codesa_documents", label: "CODESA Negotiation Records" },
-      { value: "truth_reconciliation", label: "Truth & Reconciliation Commission Report" },
+      {
+        value: "truth_reconciliation",
+        label: "Truth & Reconciliation Commission Report",
+      },
       { value: "apartheid_law", label: "Historical Apartheid-Era Law" },
     ],
     administrative: [
@@ -61,16 +75,19 @@ export default function Upload({
       { value: "ministerial_directive", label: "Ministerial Directive" },
       { value: "circular", label: "Departmental Circular" },
       { value: "tender_notice", label: "Tender or Procurement Document" },
-      { value: "presidential_proclamation", label: "Presidential Proclamation" },
+      {
+        value: "presidential_proclamation",
+        label: "Presidential Proclamation",
+      },
       { value: "executive_order", label: "Executive Instruction/Order" },
-    ]
+    ],
   };
 
   const [metadata, setMetadata] = useState({
-    displayName: '',
-    documentType: '',
-    year: '',
-    author: ''
+    displayName: "",
+    documentType: "",
+    year: "",
+    author: "",
   });
 
   const handleCategoryChange = (e) => {
@@ -80,9 +97,9 @@ export default function Upload({
 
   const handleMetadataChange = (e) => {
     const { name, value } = e.target;
-    setMetadata(prev => ({
+    setMetadata((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -91,12 +108,12 @@ export default function Upload({
     if (!file || !user || disabled) return;
 
     if (!metadata.documentType) {
-      setError('Please specify the document type');
+      setError("Please specify the document type");
       return;
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      setError('File size exceeds 50MB limit');
+      setError("File size exceeds 50MB limit");
       return;
     }
 
@@ -105,32 +122,35 @@ export default function Upload({
     setError(null);
     setSuccess(false);
 
-    let filePath = '';
+    let filePath = "";
 
     try {
-      const fileExt = file.name.split('.').pop().toLowerCase();
+      const fileExt = file.name.split(".").pop().toLowerCase();
       const fileName = `${user.id.slice(0, 8)}-${Date.now()}.${fileExt}`;
       filePath = `${user.id}/${parentId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('documents')
+        .from("documents")
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: false,
           contentType: file.type,
           onProgress: ({ loaded, total }) => {
             setProgress(Math.round((loaded / total) * 100));
-          }
+          },
         });
 
       if (uploadError) throw uploadError;
 
-      const { error: dbError } = await supabase
-        .from('documents')
+      const { data: doc, error: dbError } = await supabase
+        .from("documents")
         .insert({
           name: file.name,
-          parent_id: parentId === '00000000-0000-0000-0000-000000000000' ? null : parentId,
-          path: '',
+          parent_id:
+            parentId === "00000000-0000-0000-0000-000000000000"
+              ? null
+              : parentId,
+          path: "",
           is_folder: false,
           storage_path: filePath,
           mime_type: file.type,
@@ -142,37 +162,61 @@ export default function Upload({
             file_type: fileExt,
             original_name: file.name,
             author: metadata.author || null,
-            uploaded_by: user.email
+            uploaded_by: user.email,
           },
-          created_by: user.id
-        });
+          created_by: user.id,
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
+      const documentId = doc.id;
+      console.log("hitting processResponse");
+
+      const processRespnse = await fetch(
+        "http://localhost:4000/api/process-document",
+        {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            documentId, // from your supabase insert
+            storagePath: filePath,
+            mimeType: file.type, // so the backend knows how to extract text
+          }),
+        }
+      );
+
+      if (!processRespnse.ok) {
+        const errorText = await processRespnse.text();
+        setError(`Processing failed: ${errorText}`);
+        return;
+      }
 
       setSuccess(true);
       setFile(null);
       setMetadata({
-        displayName: '',
-        documentType: '',
-        year: '',
-        author: ''
+        displayName: "",
+        documentType: "",
+        year: "",
+        author: "",
       });
-      
+
       if (onUploadSuccess) await onUploadSuccess();
-      
+
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Upload failed');
-      
+      console.error("Upload error:", err);
+      setError(err.message || "Upload failed");
+
       if (filePath) {
         try {
-          await supabase.storage.from('documents').remove([filePath]);
+          await supabase.storage.from("documents").remove([filePath]);
         } catch (cleanupErr) {
-          console.error('Cleanup failed:', cleanupErr);
+          console.error("Cleanup failed:", cleanupErr);
         }
       }
-      
+
       setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(false);
@@ -182,8 +226,12 @@ export default function Upload({
   return (
     <section className="upload-container">
       <h2>Upload Document</h2>
-      
-      <form onSubmit={handleUpload} className="upload-form" aria-label="Upload document form">
+
+      <form
+        onSubmit={handleUpload}
+        className="upload-form"
+        aria-label="Upload document form"
+      >
         <fieldset className="file-selection">
           <legend>File Selection</legend>
           <label htmlFor="file-upload" className="file-upload-label">
@@ -191,7 +239,7 @@ export default function Upload({
               <figure className="file-preview">
                 <figcaption>{file.name}</figcaption>
                 <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                <p>{file.name.split('.').pop().toUpperCase()}</p>
+                <p>{file.name.split(".").pop().toUpperCase()}</p>
               </figure>
             ) : (
               <p className="upload-prompt">
@@ -208,10 +256,14 @@ export default function Upload({
               setError(null);
               if (e.target.files?.[0]) {
                 const fileName = e.target.files[0].name;
-                const nameWithoutExt = fileName.lastIndexOf('.') > 0 
-                  ? fileName.substring(0, fileName.lastIndexOf('.'))
-                  : fileName;
-                setMetadata(prev => ({ ...prev, displayName: nameWithoutExt }));
+                const nameWithoutExt =
+                  fileName.lastIndexOf(".") > 0
+                    ? fileName.substring(0, fileName.lastIndexOf("."))
+                    : fileName;
+                setMetadata((prev) => ({
+                  ...prev,
+                  displayName: nameWithoutExt,
+                }));
               }
             }}
             className="file-input"
@@ -245,11 +297,15 @@ export default function Upload({
               disabled={loading}
             >
               <option value="">Select a category...</option>
-              <option value="constitutional">Constitutional & Foundational</option>
+              <option value="constitutional">
+                Constitutional & Foundational
+              </option>
               <option value="legislation">Legislation & Policy</option>
               <option value="judicial">Judicial Decisions</option>
               <option value="human_rights">Human Rights & International</option>
-              <option value="historical">Historical & Liberation Documents</option>
+              <option value="historical">
+                Historical & Liberation Documents
+              </option>
               <option value="administrative">Government Notices & Admin</option>
             </select>
 
@@ -264,7 +320,9 @@ export default function Upload({
             >
               <option value="">Select document type...</option>
               {documentOptions[selectedCategory]?.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
+                <option key={value} value={value}>
+                  {label}
+                </option>
               ))}
             </select>
           </section>
@@ -310,13 +368,17 @@ export default function Upload({
           disabled={!file || loading || disabled || !metadata.documentType}
           className="upload-button"
         >
-          {loading ? 'Uploading...' : 'Upload Document'}
+          {loading ? "Uploading..." : "Upload Document"}
         </button>
 
         {error && (
           <article className="error-message" role="alert">
             <p>{error}</p>
-            <button onClick={() => setError(null)} className="dismiss-button" aria-label="Dismiss error message">
+            <button
+              onClick={() => setError(null)}
+              className="dismiss-button"
+              aria-label="Dismiss error message"
+            >
               ×
             </button>
           </article>
@@ -324,8 +386,8 @@ export default function Upload({
 
         {success && (
           <output className="success-message">
-          ✓ Document uploaded successfully!
-        </output>
+            ✓ Document uploaded successfully!
+          </output>
         )}
       </form>
     </section>
