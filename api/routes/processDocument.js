@@ -45,10 +45,12 @@ router.post("/", async (req, res) => {
     }
 
     // 3) SPLIT into ~500-token chunks
+    const CHUNK_SIZE = 500;
+    const STRIDE = 250;
     const chunks = [];
     const tokens = encode(fullText);
-    for (let i = 0; i < tokens.length; i += 500) {
-      const slice = tokens.slice(i, i + 500);
+    for (let i = 0; i < tokens.length; i += STRIDE) {
+      const slice = tokens.slice(i, i + CHUNK_SIZE);
       const textChunk = decode(slice);
       chunks.push(textChunk);
     }

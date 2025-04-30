@@ -2,7 +2,7 @@ import express from "express";
 import { openai, supabase } from "../context/client.js";
 
 const router = express.Router();
-const MATCH_COUNT = 200;
+const MATCH_COUNT = 300;
 
 router.get("/", async (req, res) => {
   try {
@@ -35,24 +35,34 @@ router.get("/", async (req, res) => {
       return res.json({ query: q, results: [] });
 
     // 3. Group by best match per document
-    const bestByDocument = {};
-    for (const chunk of chunks) {
+    const byDoc = {};
+    const SNIPPETS_PER_DOC = 3;
+
+    // Group all chunks by document_id
+    chunks.forEach((chunk) => {
       const docId = chunk.document_id;
-      if (
-        !bestByDocument[docId] ||
-        chunk.similarity_score < bestByDocument[docId].similarity_score
-      ) {
-        bestByDocument[docId] = chunk;
-      }
-    }
+      if (!byDoc[docId]) byDoc[docId] = [];
+      byDoc[docId].push(chunk);
+    });
 
-    // 4. Sort and pick top 10 docs
-    const sortedDocs = Object.values(bestByDocument)
-      .sort((a, b) => a.similarity_score - b.similarity_score)
-      .slice(0, 10);
+    // For each doc, sort its chunks by score ascending, keep top K
+    const docsWithSnippets = Object.entries(byDoc).map(([docId, chunkArr]) => {
+      const topChunks = chunkArr
+        .sort((a, b) => a.similarity_score - b.similarity_score)
+        .slice(0, SNIPPETS_PER_DOC);
+      return { docId, snippets: topChunks };
+    });
 
-    // 5. Fetch metadata from `documents` table
-    const docIds = sortedDocs.map((d) => d.document_id);
+    // Sort documents by the best (first) snippet’s score
+    docsWithSnippets.sort(
+      (a, b) => a.snippets[0].similarity_score - b.snippets[0].similarity_score
+    );
+
+    // Limit to top-10 documents overall
+    const topDocs = docsWithSnippets.slice(0, 10);
+
+    // Pull in their metadata in one go
+    const docIds = topDocs.map((d) => d.docId);
     const { data: docs, error: docError } = await supabase
       .from("documents")
       .select("id, name, storage_path, metadata")
@@ -60,48 +70,58 @@ router.get("/", async (req, res) => {
 
     if (docError) throw docError;
 
-    // 6. Combine results
-    const results = sortedDocs.map((chunk) => {
-      const doc = docs.find((d) => d.id === chunk.document_id);
-
-      // after you fetch `chunk.chunk_text`…
-      let text = chunk.chunk_text
-        .replace(/\s+/g, " ") // collapse spaces, newlines, tabs
-        .trim(); // strip leading/trailing
-
-      // find where your query phrase lives
-      const lowText = text.toLowerCase();
-      const lowQuery = q.toLowerCase();
-      const pos = lowText.indexOf(lowQuery);
-
-      // if we found it, grab 100 characters before & after; else take the first 200 chars
-      let snippet;
+    // Helper to clean & trim snippet text
+    function makeSnippetText(raw, query) {
+      const text = raw.replace(/\s+/g, " ").trim();
+      const qlow = query.toLowerCase();
+      const pos = text.toLowerCase().indexOf(qlow);
       if (pos !== -1) {
         const start = Math.max(0, pos - 100);
-        const end = Math.min(text.length, pos + lowQuery.length + 200);
-        snippet = text.slice(start, end);
-      } else {
-        snippet = text.slice(0, 300);
+        const end = Math.min(text.length, pos + query.length + 100);
+        return text.slice(start, end) + "…";
       }
-      snippet = snippet + "…";
+      return text.slice(0, 200) + "…";
+    }
 
-      const { publicURL, error: urlError } = supabase.storage
-        .from("documents")
-        .getPublicUrl(doc.storage_path);
+    const results = await Promise.all(
+      topDocs.map(async ({ docId, snippets }) => {
+        const doc = docs.find((d) => d.id === docId);
 
-      if (urlError) throw urlError;
+        // generate a signed url (or getPublicUrl) as before
+        const { data, error: urlError } = await supabase.storage
+          .from("documents")
+          .createSignedUrl(doc.storage_path, 120);
+        if (urlError) throw urlError;
 
-      return {
-        document_id: doc.id,
-        title: doc.name,
-        snippet,
-        url: publicURL,
-        score: chunk.similarity_score,
-        metadata: doc.metadata,
-      };
-    });
+        // map each top chunk into a cleaned snippet
+        const snippetResults = snippets.map((ch) => ({
+          text: makeSnippetText(ch.chunk_text, q),
+          score: ch.similarity_score,
+        }));
 
-    return res.json({ query: q, results });
+        return {
+          document_id: doc.id,
+          title: doc.name,
+          url: data.signedUrl,
+          metadata: doc.metadata,
+          snippets: snippetResults, // array of up to 3 { text, score }
+        };
+      })
+    );
+
+    const seen = new Set();
+    const uniqueResults = [];
+
+    for (const r of results) {
+      // pick whichever key makes sense—here I use the snippet
+      if (!seen.has(r.document_id)) {
+        seen.add(r.document_id);
+        uniqueResults.push(r);
+      }
+    }
+
+    // finally:
+    return res.json({ query: q, results: uniqueResults });
   } catch (err) {
     console.error("search error:", err);
     return res.status(500).json({ error: "Search failed" });
