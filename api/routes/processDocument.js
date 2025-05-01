@@ -1,9 +1,12 @@
 import express from "express";
-import pdfParse from "pdf-parse";
+import pdfjs from "pdfjs-dist/legacy/build/pdf.js";
+const { getDocument } = pdfjs;
 import { encode, decode } from "gpt-tokenizer";
 import { supabase, openai } from "../context/client.js"; // your existing clients.js
 
 const router = express.Router();
+// Configure pdfjs-dist for Node.js environment
+// pdfjsLib.GlobalWorkerOptions.workerSrc = ""; // Disable worker in Node.js
 
 /**
  * POST /api/process-document
@@ -27,19 +30,19 @@ router.post("/", async (req, res) => {
       throw downloadError || new Error("Download failed");
 
     // 2) EXTRACT TEXT
-    let fullText;
+    let fullText = "";
     if (mimeType === "application/pdf") {
-      // pdf-parse accepts a Buffer
-      const buffer = Buffer.isBuffer(fileData)
-        ? fileData
-        : Buffer.from(await fileData.arrayBuffer());
-      const { text } = await pdfParse(buffer);
-      fullText = text;
+      const buffer = new Uint8Array(await fileData.arrayBuffer());
+      const loadingTask = getDocument({ data: buffer });
+      const pdf = await loadingTask.promise;
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map((item) => item.str).join(" ") + "\n";
+      }
     } else if (mimeType.startsWith("text/")) {
-      const buffer = Buffer.isBuffer(fileData)
-        ? fileData
-        : Buffer.from(await fileData.arrayBuffer());
-      fullText = buffer.toString("utf-8");
+      fullText = Buffer.from(await fileData.arrayBuffer()).toString("utf-8");
     } else {
       return res.status(415).json({ error: "Unsupported mimeType" });
     }
