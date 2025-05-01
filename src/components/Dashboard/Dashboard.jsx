@@ -27,9 +27,6 @@ function Dashboard() {
         >
           ☰
         </button>
-        <header className="dashboard-header">
-          <h1>Admin Dashboard</h1>
-        </header>
         <section aria-label="File browser interface" className="folder-browser">
           <FolderBrowser />
         </section>

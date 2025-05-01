@@ -10,7 +10,6 @@ export default function Upload({
 }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const { user } = useAuth();
@@ -18,10 +17,7 @@ export default function Upload({
 
   const documentOptions = {
     constitutional: [
-      {
-        value: "constitution_1996",
-        label: "Constitution of South Africa (1996)",
-      },
+      { value: "constitution_1996", label: "Constitution of South Africa (1996)" },
       { value: "interim_constitution", label: "Interim Constitution (1993)" },
       { value: "constitutional_amendment", label: "Constitutional Amendment" },
       { value: "bill_of_rights", label: "Bill of Rights" },
@@ -37,24 +33,15 @@ export default function Upload({
     ],
     judicial: [
       { value: "constitutional_court", label: "Constitutional Court Ruling" },
-      {
-        value: "supreme_court_appeal",
-        label: "Supreme Court of Appeal Decision",
-      },
+      { value: "supreme_court_appeal", label: "Supreme Court of Appeal Decision" },
       { value: "high_court", label: "High Court Decision" },
       { value: "magistrate_ruling", label: "Magistrate Court Ruling" },
       { value: "legal_opinion", label: "Legal Opinion" },
     ],
     human_rights: [
-      {
-        value: "south_african_hr_commission",
-        label: "SA Human Rights Commission Report",
-      },
+      { value: "south_african_hr_commission", label: "SA Human Rights Commission Report" },
       { value: "udhr", label: "Universal Declaration of Human Rights" },
-      {
-        value: "african_charter",
-        label: "African Charter on Human and Peoples' Rights",
-      },
+      { value: "african_charter", label: "African Charter on Human and Peoples' Rights" },
       { value: "iccpr", label: "ICCPR Document" },
       { value: "icescr", label: "ICESCR Document" },
       { value: "cedaw", label: "CEDAW Document" },
@@ -64,10 +51,7 @@ export default function Upload({
       { value: "freedom_charter", label: "Freedom Charter (1955)" },
       { value: "rivieraconference", label: "Rivonia Trial Documents" },
       { value: "codesa_documents", label: "CODESA Negotiation Records" },
-      {
-        value: "truth_reconciliation",
-        label: "Truth & Reconciliation Commission Report",
-      },
+      { value: "truth_reconciliation", label: "Truth & Reconciliation Commission Report" },
       { value: "apartheid_law", label: "Historical Apartheid-Era Law" },
     ],
     administrative: [
@@ -75,10 +59,7 @@ export default function Upload({
       { value: "ministerial_directive", label: "Ministerial Directive" },
       { value: "circular", label: "Departmental Circular" },
       { value: "tender_notice", label: "Tender or Procurement Document" },
-      {
-        value: "presidential_proclamation",
-        label: "Presidential Proclamation",
-      },
+      {value: "presidential_proclamation",label: "Presidential Proclamation" },
       { value: "executive_order", label: "Executive Instruction/Order" },
     ],
   };
@@ -117,8 +98,29 @@ export default function Upload({
       return;
     }
 
+    if (metadata.year && parseInt(metadata.year) > new Date().getFullYear()) {
+      setError("Year cannot be in the future");
+      return;
+    }
+
+    const { data: existingFiles, error: lookupError } = await supabase
+    .from('documents')
+    .select('name')
+    .eq('name', file.name);
+
+    if (lookupError) {
+      setError("Couldn't verify file uniqueness");
+      return;
+    }
+
+    if (existingFiles && existingFiles.length > 0) {
+      setError(`A file named "${file.name}" already exists. Please rename your file.`);
+      return;
+    }
+
+    if (error) return;
+
     setLoading(true);
-    setProgress(0);
     setError(null);
     setSuccess(false);
 
@@ -135,9 +137,6 @@ export default function Upload({
           cacheControl: "3600",
           upsert: false,
           contentType: file.type,
-          onProgress: ({ loaded, total }) => {
-            setProgress(Math.round((loaded / total) * 100));
-          },
         });
 
       if (uploadError) throw uploadError;
@@ -251,19 +250,28 @@ export default function Upload({
           <input
             id="file-upload"
             type="file"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] || null);
-              setError(null);
-              if (e.target.files?.[0]) {
-                const fileName = e.target.files[0].name;
-                const nameWithoutExt =
-                  fileName.lastIndexOf(".") > 0
-                    ? fileName.substring(0, fileName.lastIndexOf("."))
-                    : fileName;
-                setMetadata((prev) => ({
-                  ...prev,
-                  displayName: nameWithoutExt,
-                }));
+            onChange={async (e) => {
+              const newFile = e.target.files?.[0];
+              setFile(newFile || null);
+              
+              if (newFile) {
+                // Check for duplicates
+                const { data: existingFiles } = await supabase
+                  .from('documents')
+                  .select('name')
+                  .eq('name', newFile.name);
+
+                if (existingFiles?.length > 0) {
+                  setError(`"${newFile.name}" already exists in the system`);
+                } else {
+                  setError(null); // Clear error if no duplicate found
+                }
+
+                // Always set display name (don't clear it for duplicates)
+                const nameWithoutExt = newFile.name.lastIndexOf('.') > 0
+                  ? newFile.name.substring(0, newFile.name.lastIndexOf('.'))
+                  : newFile.name;
+                setMetadata(prev => ({ ...prev, displayName: nameWithoutExt }));
               }
             }}
             className="file-input"
@@ -355,13 +363,6 @@ export default function Upload({
             />
           </section>
         </fieldset>
-
-        {loading && (
-          <figure className="progress-container">
-            <progress value={progress} max="100" aria-label="Upload progress" />
-            <figcaption>{progress}%</figcaption>
-          </figure>
-        )}
 
         <button
           type="submit"

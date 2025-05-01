@@ -1,10 +1,16 @@
-import { useState, useEffect, React } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../contexts/client';
 import { useAuth } from '../../contexts/AuthContext';
 import Upload from './Upload';
 import Edit from './Edit';
+import Search from './Search';
 import ContextMenu from './ContextMenu';
+import Delete from './Delete';
+import Filter from './Filter';
+import { documentTypes } from './documentTypes';
 import './FolderBrowser.css';
+
+const ROOT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
 
 function FolderBrowser() {
   const { user } = useAuth();
@@ -20,13 +26,10 @@ function FolderBrowser() {
   const [deletedItems, setDeletedItems] = useState(new Set());
   const [editModal, setEditModal] = useState({ show: false, item: null });
   const [movingItem, setMovingItem] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
-  const [filterCriteria, setFilterCriteria] = useState(null);
-  const [filterValue, setFilterValue] = useState('');
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [hasSearchResults, setHasSearchResults] = useState(false);
+  const [isFilterActive, setIsFilterActive] = useState(false); // New state to track filter activity
 
-  // Fetch folder contents
   useEffect(() => {
     if (showUploadForm) return;
 
@@ -36,20 +39,22 @@ function FolderBrowser() {
       try {
         let query = supabase
           .from('documents')
-          .select('*')
+          .select(`
+            *,
+            parentFolder:documents!parent_id(name)
+          `)
           .order('is_folder', { ascending: false })
-          .order('name', {ascending: true});
-        if (currentFolder === '00000000-0000-0000-0000-000000000000') {
-          query = query.is('parent_id', null);
-        } else {
-          query = query.eq('parent_id', currentFolder);
-        }
+          .order('name', { ascending: true });
+        query = query.eq('parent_id', currentFolder);
         const { data, error: queryError } = await query;
         if (queryError) throw queryError;
         const validData = Array.isArray(data) ? data : [];
         const deletedIds = new Set(data.filter(item => item.is_deleted).map(item => item.id));
         setDeletedItems(deletedIds);
-        setContents(validData);
+        setContents(validData.map(item => ({
+          ...item,
+          parentFolder: item.parentFolder ? { name: item.parentFolder.name } : null
+        })));
       } catch (err) {
         console.error('Error fetching contents:', err);
         setError(err.message);
@@ -70,7 +75,7 @@ function FolderBrowser() {
   const isDescendant = (folderId, potentialParentId) => {
     if (folderId === potentialParentId) return true;
     const parent = contents.find(item => item.id === potentialParentId);
-    if (!parent || !parent.parent_id) return false;
+    if (!parent?.parent_id) return false;
     return isDescendant(folderId, parent.parent_id);
   };
 
@@ -85,7 +90,7 @@ function FolderBrowser() {
     try {
       const { error } = await supabase
         .from('documents')
-        .update({ parent_id: currentFolder === '00000000-0000-0000-0000-000000000000' ? null : currentFolder })
+        .update({ parent_id: currentFolder })
         .eq('id', movingItem.id);
       if (error) throw error;
       refreshContents();
@@ -95,147 +100,6 @@ function FolderBrowser() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = async () => {
-    if (currentFolder === '00000000-0000-0000-0000-000000000000') {
-      setError('Search is disabled in the Constitution Archive');
-      return;
-    }
-    if (!searchQuery.trim()) {
-      setFilterCriteria(null);
-      setFilterValue('');
-      refreshContents();
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setFilterCriteria(null);
-    setFilterValue('');
-    try {
-      let query = supabase
-        .from('documents')
-        .select(`
-          *,
-          parentFolder:parent_id(name)
-        `)
-        .eq('is_folder', false)
-        .or(
-          `metadata->>displayName.ilike.%${searchQuery}%,` +
-          `metadata->>type.ilike.%${searchQuery}%,` +
-          `metadata->>file_type.ilike.%${searchQuery}%,` +
-          `metadata->>year.ilike.%${searchQuery}%`
-        );
-      const allSubfolderIds = await getAllSubfolderIds(currentFolder);
-      const searchFolders = [currentFolder, ...allSubfolderIds];
-      query = query.in('parent_id', searchFolders);
-      const { data, error } = await query;
-      if (error) throw error;
-      const transformedData = data.map(item => ({
-        ...item,
-        parentFolder: item.parentFolder ? { name: item.parentFolder.name } : null
-      }));
-      setContents(transformedData);
-    } catch (err) {
-      setError(`Search failed: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileDoubleClick = async (file) => {
-    if (!file.parentFolder) return;
-    const newPath = await buildPathToFile(file);
-    setPath(newPath);
-    setCurrentFolder(file.parent_id);
-    setSearchQuery('');
-    setShowSearch(false);
-    refreshContents();
-  };
-
-  const buildPathToFile = async (file) => {
-    const path = [];
-    let currentId = file.parent_id;
-    const { data: parent } = await supabase
-      .from('documents')
-      .select('id, name, parent_id')
-      .eq('id', currentId)
-      .single();
-    if (parent) {
-      path.unshift({ id: parent.id, name: parent.name });
-      currentId = parent.parent_id;
-    }
-    while (currentId && currentId !== '00000000-0000-0000-0000-000000000000') {
-      const { data: folder } = await supabase
-        .from('documents')
-        .select('id, name, parent_id')
-        .eq('id', currentId)
-        .single();
-      if (folder) {
-        path.unshift({ id: folder.id, name: folder.name });
-        currentId = folder.parent_id;
-      } else {
-        break;
-      }
-    }
-    path.unshift({ id: '00000000-0000-0000-0000-000000000000', name: 'Constitution Archive' });
-    return path;
-  };
-
-  const getAllSubfolderIds = async (folderId) => {
-    const ids = [];
-    if (folderId === '00000000-0000-0000-0000-000000000000') return ids;
-    const queue = [folderId];
-    while (queue.length > 0) {
-      const currentId = queue.shift();
-      const { data, error } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('parent_id', currentId)
-        .eq('is_folder', true);
-      if (error) {
-        console.error('Error fetching subfolder IDs:', error);
-        throw error;
-      }
-      data.forEach(folder => {
-        ids.push(folder.id);
-        queue.push(folder.id);
-      });
-    }
-    return ids;
-  };
-
-  const handleApplyFilter = async () => {
-    if (!filterCriteria || !filterValue) {
-      refreshContents();
-      return;
-    }
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .eq('is_folder', false)
-        .eq('parent_id', currentFolder === '00000000-0000-0000-0000-000000000000' ? null : currentFolder);
-      if (filterCriteria === 'file_type') {
-        query = query.ilike('metadata->>file_type', `%${filterValue}%`);
-      } else {
-        query = query.eq(`metadata->>${filterCriteria}`, filterValue);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      setContents(data || []);
-    } catch (err) {
-      setError('Filter failed: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearFilter = () => {
-    setFilterCriteria(null);
-    setFilterValue('');
-    refreshContents();
   };
 
   const handleContextMenu = (e, item) => {
@@ -271,38 +135,6 @@ function FolderBrowser() {
     }
   };
 
-  const softDeleteItem = async (item) => {
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ is_deleted: true })
-        .eq('id', item.id);
-      if (error) throw error;
-      setDeletedItems(prev => new Set(prev).add(item.id));
-      refreshContents();
-    } catch (err) {
-      setError('Failed to delete item: ' + err.message);
-    }
-  };
-
-  const undoDelete = async (item) => {
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ is_deleted: false })
-        .eq('id', item.id);
-      if (error) throw error;
-      setDeletedItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(item.id);
-        return newSet;
-      });
-      refreshContents();
-    } catch (err) {
-      setError('Failed to restore item: ' + err.message);
-    }
-  };
-
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (contextMenu.show && !e.target.closest('.context-menu-popup')) {
@@ -324,23 +156,49 @@ function FolderBrowser() {
     }
   };
 
+  const checkFolderNameExists = async (folderName) => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('is_folder', true)
+        .eq('parent_id', currentFolder)
+        .ilike('name', folderName);
+      
+      if (error) throw error;
+      return data && data.length > 0;
+    } catch (err) {
+      console.error('Error checking folder name:', err);
+      setError('Failed to validate folder name');
+      return true;
+    }
+  };
+
   const createFolder = async () => {
     if (!newFolderName.trim()) return;
+    
     setLoading(true);
     setError(null);
+    
     try {
+      const nameExists = await checkFolderNameExists(newFolderName);
+      if (nameExists) {
+        throw new Error('A folder with this name already exists in this location');
+      }
+  
       if (!user) throw new Error('Not authenticated');
       const { error: insertError } = await supabase
         .from('documents')
         .insert({
           name: newFolderName,
           is_folder: true,
-          parent_id: currentFolder === '00000000-0000-0000-0000-000000000000' ? null : currentFolder,
+          parent_id: currentFolder,
           created_by: user.id,
           metadata: { type: 'folder' },
           is_deleted: false
         })
         .select();
+      
       if (insertError) throw insertError;
       setShowCreateFolder(false);
       setNewFolderName('');
@@ -358,19 +216,21 @@ function FolderBrowser() {
     try {
       let query = supabase
         .from('documents')
-        .select('*')
+        .select(`
+          *,
+          parentFolder:documents!parent_id(name)
+        `)
         .order('is_folder', { ascending: false })
         .order('name');
-      if (currentFolder === '00000000-0000-0000-0000-000000000000') {
-        query = query.is('parent_id', null);
-      } else {
-        query = query.eq('parent_id', currentFolder);
-      }
+      query = query.eq('parent_id', currentFolder);
       const { data, error } = await query;
       if (error) throw error;
       const deletedIds = new Set(data.filter(item => item.is_deleted).map(item => item.id));
       setDeletedItems(deletedIds);
-      setContents(data || []);
+      setContents(data.map(item => ({
+        ...item,
+        parentFolder: item.parentFolder ? { name: item.parentFolder.name } : null
+      })) || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -378,16 +238,15 @@ function FolderBrowser() {
     }
   };
 
-  const handleSearchToggle = () => {
-    if (currentFolder === '00000000-0000-0000-0000-000000000000') {
-      setError('Search is disabled in the Constitution Archive');
-      return;
-    }
-    setShowSearch(!showSearch);
-    if (showSearch) {
-      setSearchQuery('');
-      refreshContents();
-    }
+  const handleSearchResults = (results) => {
+    setContents(results);
+    setHasSearchResults(true);
+  };
+
+  const handleClearSearch = () => {
+    setIsSearchActive(false);
+    setHasSearchResults(false);
+    refreshContents();
   };
 
   const renderBreadcrumbs = () => (
@@ -424,10 +283,18 @@ function FolderBrowser() {
         placeholder="Folder name"
         disabled={loading}
       />
+      {error?.includes('already exists') && (
+        <p className="validation-error" role="alert">
+          {error}
+        </p>
+      )}
       <button type="button" onClick={createFolder} disabled={loading}>
         {loading ? 'Creating...' : 'Create'}
       </button>
-      <button type="button" onClick={() => setShowCreateFolder(false)} disabled={loading}>
+      <button type="button" onClick={() => {
+        setShowCreateFolder(false);
+        setError(null);
+      }} disabled={loading}>
         Cancel
       </button>
     </form>
@@ -455,9 +322,9 @@ function FolderBrowser() {
         <li>
           <button
             onClick={() => setShowUploadForm(!showUploadForm)}
-            disabled={loading || currentFolder === '00000000-0000-0000-0000-000000000000'}
+            disabled={loading || currentFolder === ROOT_FOLDER_ID}
             className={showUploadForm ? 'cancel-button' : 'upload-button'}
-            title={currentFolder === '00000000-0000-0000-0000-000000000000' ? "Uploads disabled in Constitution Archive" : ""}
+            title={currentFolder === ROOT_FOLDER_ID ? "Uploads disabled in Constitution Archive" : ""}
           >
             {showUploadForm ? 'Cancel Upload' : 'Upload File'}
           </button>
@@ -471,7 +338,7 @@ function FolderBrowser() {
           <li>
             <button
               onClick={handleMoveHere}
-              disabled={loading || currentFolder === '00000000-0000-0000-0000-000000000000' || (movingItem.is_folder && isDescendant(currentFolder, movingItem.id))}
+              disabled={loading || (movingItem.is_folder && isDescendant(currentFolder, movingItem.id))}
               className="move-button"
             >
               Move Here
@@ -487,31 +354,98 @@ function FolderBrowser() {
         )}
         <li>
           <button
-            onClick={handleSearchToggle}
-            disabled={loading || currentFolder === '00000000-0000-0000-0000-000000000000'}
-            className={showSearch ? 'active-search-button' : ''}
-            title={currentFolder === '00000000-0000-0000-0000-000000000000' ? "Search disabled in Constitution Archive" : ""}
+            onClick={() => setIsSearchActive(!isSearchActive)}
+            disabled={loading || showUploadForm}
+            className={isSearchActive ? 'active-search-button' : ''}
           >
-            {showSearch ? 'Cancel Search' : 'Search'}
+            {isSearchActive ? 'Cancel Search' : 'Search'}
           </button>
         </li>
-        {contents.some(item => !item.is_folder) && (
-          <li className="filter-container">
-            <button onClick={() => setShowFilterDropdown(!showFilterDropdown)}>Filter</button>
-            {showFilterDropdown && (
-              <menu className="filter-dropdown">
-                <button onClick={() => setFilterCriteria('type')}>Type</button>
-                <button onClick={() => setFilterCriteria('year')}>Year</button>
-                <button onClick={() => setFilterCriteria('file_type')}>File Type</button>
-              </menu>
-            )}
+        {!showUploadForm && contents.some(item => !item.is_folder) && (
+          <li>
+            <button
+              onClick={() => {
+                setIsFilterActive(!isFilterActive);
+                if (isFilterActive) {
+                  refreshContents(); 
+                }
+              }}
+              disabled={loading}
+              className={isFilterActive ? 'active-filter-button' : ''}
+            >
+              {isFilterActive ? 'Cancel Filter' : 'Filter'}
+            </button>
+          </li>
+        )}
+        {isFilterActive && (
+          <li>
+            <Filter
+              currentFolder={currentFolder}
+              onFilterResults={(results) => {
+                setContents(results);
+              }}
+              onFilterError={setError}
+              onFilterActive={(active) => {
+                setIsFilterActive(active);
+                if (!active) {
+                  refreshContents();
+                }
+              }}
+              renderFilterInput={({ filterCriteria, setFilterCriteria, filterValue, setFilterValue, handleApplyFilter, handleClearFilter }) => (
+                <section className="filter-input-container">
+                  <select
+                    value={filterCriteria}
+                    onChange={(e) => setFilterCriteria(e.target.value)}
+                    aria-label="Select filter criteria"
+                  >
+                    <option value="">Select filter criteria</option>
+                    <option value="year">Year</option>
+                    <option value="file_type">File Type</option>
+                    <option value="type">Document Type</option>
+                  </select>
+                  {filterCriteria && (
+                    <>
+                      {filterCriteria === 'year' || filterCriteria === 'file_type' ? (
+                        <input
+                          type="text"
+                          value={filterValue}
+                          onChange={(e) => setFilterValue(e.target.value)}
+                          placeholder={`Enter ${filterCriteria === 'year' ? 'year (e.g., 2023)' : 'file extension (e.g., pdf)'}`}
+                          aria-label={`Enter ${filterCriteria === 'year' ? 'year' : 'file type'}`}
+                        />
+                      ) : (
+                        <select
+                          value={filterValue}
+                          onChange={(e) => setFilterValue(e.target.value)}
+                          aria-label="Select document type"
+                        >
+                          <option value="">Select a type</option>
+                          {documentTypes.map(group => (
+                            <optgroup key={group.group} label={group.group}>
+                              {group.options.map(option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      )}
+                      <button onClick={handleApplyFilter} disabled={!filterValue}>
+                        Apply
+                      </button>
+                      <button onClick={handleClearFilter}>Clear</button>
+                    </>
+                  )}
+                </section>
+              )}
+            />
           </li>
         )}
       </menu>
-
       {!showUploadForm && showCreateFolder && renderCreateFolderForm()}
 
-      {showUploadForm && (
+      {showUploadForm && currentFolder !== ROOT_FOLDER_ID && (
         <section className="upload-focus-view" aria-labelledby="upload-heading">
           <Upload
             parentId={currentFolder}
@@ -528,103 +462,37 @@ function FolderBrowser() {
         <ContentsDisplay
           contents={contents}
           loading={loading}
-          showSearch={showSearch}
+          showSearch={isSearchActive}
+          hasSearchResults={hasSearchResults}
+          isFilterActive={isFilterActive} 
           movingItem={movingItem}
           navigateToFolder={navigateToFolder}
-          handleFileDoubleClick={handleFileDoubleClick}
           handleContextMenu={handleContextMenu}
           contextMenu={contextMenu}
-          filterCriteria={filterCriteria}
         />
       )}
 
-      {showSearch && currentFolder !== '00000000-0000-0000-0000-000000000000' && (
-        <search className="search-container">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search files in this folder ..."
-            disabled={loading}
-          />
-          <button onClick={handleSearch} disabled={loading}>Search</button>\
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setShowSearch(false);
-              refreshContents();
-            }}
-            disabled={loading}
-          >
-            Clear Search
-          </button>
-        </search>
+      {isSearchActive && (
+        <Search
+          currentFolder={currentFolder}
+          onSearchResults={handleSearchResults}
+          onSearchError={setError}
+          onClearSearch={handleClearSearch}
+        />
       )}
 
-      {filterCriteria && (
-        <section className="filter-input-container">
-          {filterCriteria === 'year' || filterCriteria === 'file_type' ? (
-            <input
-              type="text"
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-              placeholder={`Enter ${filterCriteria === 'year' ? 'year (e.g., 2023)' : 'file extension (e.g., pdf)'}`}
-            />
-          ) : (
-            <select value={filterValue} onChange={(e) => setFilterValue(e.target.value)}>
-              <option value="">Select a type</option>
-              <optgroup label="Constitutional Documents">
-                <option value="constitution_1996">Constitution of South Africa (1996)</option>
-                <option value="interim_constitution">Interim Constitution (1993)</option>
-                <option value="constitutional_amendment">Constitutional Amendment</option>
-                <option value="bill_of_rights">Bill of Rights</option>
-                <option value="founding_principles">Founding Principles Document</option>
-              </optgroup>
-              <optgroup label="Legislation">
-                <option value="act_of_parliament">Act of Parliament</option>
-                <option value="regulation">Government Regulation</option>
-                <option value="bylaw">Municipal By-law</option>
-                <option value="white_paper">White Paper</option>
-                <option value="green_paper">Green Paper</option>
-                <option value="policy_document">Policy Document</option>
-              </optgroup>
-              <optgroup label="Judicial Documents">
-                <option value="constitutional_court">Constitutional Court Ruling</option>
-                <option value="supreme_court_appeal">Supreme Court of Appeal Decision</option>
-                <option value="high_court">High Court Decision</option>
-                <option value="magistrate_ruling">Magistrate Court Ruling</option>
-                <option value="legal_opinion">Legal Opinion</option>
-              </optgroup>
-              <optgroup label="Human Rights Documents">
-                <option value="south_african_hr_commission">SA Human Rights Commission Report</option>
-                <option value="udhr">Universal Declaration of Human Rights</option>
-                <option value="african_charter">African Charter on Human and Peoples' Rights</option>
-                <option value="iccpr">ICCPR Document</option>
-                <option value="icescr">ICESCR Document</option>
-                <option value="cedaw">CEDAW Document</option>
-                <option value="crc">Convention on the Rights of the Child</option>
-              </optgroup>
-              <optgroup label="Historical Documents">
-                <option value="freedom_charter">Freedom Charter (1955)</option>
-                <option value="rivieraconference">Rivonia Trial Documents</option>
-                <option value="codesa_documents">CODESA Negotiation Records</option>
-                <option value="truth_reconciliation">Truth & Reconciliation Commission Report</option>
-                <option value="apartheid_law">Historical Apartheid-Era Law</option>
-              </optgroup>
-              <optgroup label="Administrative Documents">
-                <option value="gazette_notice">Government Gazette Notice</option>
-                <option value="ministerial_directive">Ministerial Directive</option>
-                <option value="circular">Departmental Circular</option>
-                <option value="tender_notice">Tender or Procurement Document</option>
-                <option value="presidential_proclamation">Presidential Proclamation</option>
-                <option value="executive_order">Executive Instruction/Order</option>
-              </optgroup>
-            </select>
-          )}
-          <button onClick={handleApplyFilter}>Apply</button>
-          <button onClick={handleClearFilter}>Clear</button>
-        </section>
-      )}
+      <Delete
+        item={contextMenu.item}
+        onSuccess={(itemId, isDeleted = true) => {
+          setDeletedItems(prev => {
+            const newSet = new Set(prev);
+            isDeleted ? newSet.add(itemId) : newSet.delete(itemId);
+            return newSet;
+          });
+          refreshContents();
+        }}
+        onError={setError}
+      />
 
       {editModal.show && (
         <Edit
@@ -644,8 +512,22 @@ function FolderBrowser() {
             setEditModal({ show: true, item: contextMenu.item });
             closeContextMenu();
           }}
-          onDelete={() => softDeleteItem(contextMenu.item)}
-          onUndoDelete={() => undoDelete(contextMenu.item)}
+          onDelete={() => {
+            setDeletedItems(prev => {
+              const newSet = new Set(prev);
+              newSet.add(contextMenu.item.id);
+              return newSet;
+            });
+            refreshContents();
+          }}
+          onUndoDelete={() => {
+            setDeletedItems(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(contextMenu.item.id);
+              return newSet;
+            });
+            refreshContents();
+          }}
           onDownload={() => handleDownload(contextMenu.item)}
           onMove={() => {
             setMovingItem(contextMenu.item);
@@ -659,7 +541,7 @@ function FolderBrowser() {
   );
 }
 
-export function ContentsDisplay({ contents, loading, showSearch, movingItem, navigateToFolder, handleFileDoubleClick, handleContextMenu, contextMenu, filterCriteria }) {
+export function ContentsDisplay({ contents, loading, showSearch, hasSearchResults, isFilterActive, movingItem, navigateToFolder, handleContextMenu, contextMenu }) {
   if (loading) {
     return <p className="loading-indicator">Loading contents...</p>;
   }
@@ -676,14 +558,13 @@ export function ContentsDisplay({ contents, loading, showSearch, movingItem, nav
                   className={`item-main-action ${movingItem?.id === item.id ? 'moving-disabled' : ''}`}
                   disabled={loading || (movingItem && movingItem.id === item.id)}
                   onClick={() => item.is_folder && navigateToFolder(item.id, item.name)}
-                  onDoubleClick={() => !item.is_folder && showSearch && handleFileDoubleClick(item)}
                   aria-label={item.is_folder ? `Open folder ${item.name}` : `View file ${item.name}`}
                 >
                   {item.is_folder ? '📁' : '📄'} 
                   {item.metadata?.displayName || item.name}
                   {!item.is_folder && <mark className="file-type">{item.metadata?.file_type}</mark>}
-                  {showSearch && !item.is_folder && item.parentFolder && (
-                    <small className="file-location"> (in {item.parentFolder.name})</small>
+                  {showSearch && hasSearchResults && !item.is_folder && (
+                    <small className="file-location"> (in {item.parentFolder?.name || 'Constitution Archive'})</small>
                   )}
                 </button>
                 <button
@@ -702,7 +583,7 @@ export function ContentsDisplay({ contents, loading, showSearch, movingItem, nav
     );
   }
 
-  if (showSearch) {
+  if (showSearch && hasSearchResults) {
     return (
       <article className="no-search-results">
         <p className="empty-icon" aria-hidden="true">🔍</p>
@@ -711,7 +592,7 @@ export function ContentsDisplay({ contents, loading, showSearch, movingItem, nav
     );
   }
 
-  if (filterCriteria) {
+  if (isFilterActive) {
     return (
       <article className="no-filter-results">
         <p className="empty-icon" aria-hidden="true">🔍</p>
