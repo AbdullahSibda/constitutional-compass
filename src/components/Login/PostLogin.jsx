@@ -5,124 +5,129 @@ import { supabase } from '../../contexts/client';
 
 const PostLogin = () => {
   const navigate = useNavigate();
-  const [showReasonInput, setShowReasonInput] = useState(false);
-  const [reason, setReason] = useState("");
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [cvFile, setCvFile] = useState(null);
+  const [motivationalLetterFile, setMotivationalLetterFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleUserContinue = () => {
-    navigate("/");
+  const handleUserContinue = () => navigate("/");
+  const handleApplyClick = () => setShowApplicationForm(true);
+
+  const handleFileChange = (setter) => (e) => {
+    if (e.target.files?.[0]) setter(e.target.files[0]);
   };
 
-  const handleApplyClick = () => {
-    setShowReasonInput(true);
-  };
-
-  const handleReasonChange = (e) => {
-    setReason(e.target.value);
-  };
-
-  const submitApplication = async () => {
-    if (!reason.trim()) {
-      alert("Please provide a reason for your application");
+  const submitApplication = async (e) => {
+    e.preventDefault();
+    
+    if (!cvFile || !motivationalLetterFile) {
+      alert("Please upload both your CV and motivational letter");
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        throw new Error("User not authenticated");
-      }
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Authentication failed");
 
-      const { error: upsertError } = await supabase
+      // Upload files to public bucket
+      const uploadFile = async (file, path) => {
+        const { data, error } = await supabase.storage
+          .from('applications')
+          .upload(`${path}/${user.id}_${Date.now()}_${file.name}`, file);
+        if (error) throw error;
+        return data;
+      };
+
+      const [cvData, letterData] = await Promise.all([
+        uploadFile(cvFile, 'cv'),
+        uploadFile(motivationalLetterFile, 'letters')
+      ]);
+
+      // Store public URLs
+      const { error: dbError } = await supabase
         .from('user_profiles')
         .upsert({
           id: user.id,
           role: 'pending',
-          admin_application_reason: reason,
+          admin_application_reason: 'pending',
+          cv_url: supabase.storage.from('applications').getPublicUrl(cvData.path).data.publicUrl,
+          motivational_letter_url: supabase.storage.from('applications').getPublicUrl(letterData.path).data.publicUrl,
           applied_at: new Date().toISOString()
         });
 
-      if (upsertError) throw upsertError;
+      if (dbError) throw dbError;
 
-      alert("Application submitted successfully! You'll be notified once approved.");
+      alert("Application submitted successfully!");
       navigate("/");
     } catch (error) {
-      console.error("Error submitting application:", error);
-      alert("Failed to submit application. Please try again.");
+      console.error("Submission error:", error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const cancelApplication = () => {
-    setShowReasonInput(false);
-    setReason("");
+    setShowApplicationForm(false);
+    setCvFile(null);
+    setMotivationalLetterFile(null);
   };
 
   return (
     <main className="postlogin-container">
       <article className="postlogin-popup">
         <header>
-          <h1 className="postlogin-title">Constitutional Compass</h1>
-          <p className="postlogin-subtext">
-            You're currently logged in as a standard user
-          </p>
+          <h1>Constitutional Compass</h1>
+          <p>You're currently logged in as a standard user</p>
         </header>
 
-        {!showReasonInput ? (
-          <menu className="postlogin-buttons">
-            <li>
-              <button className="continue-button" onClick={handleUserContinue}>
-                Continue as User
-              </button>
-            </li>
-            <li>
-              <button className="apply-button" onClick={handleApplyClick}>
-                Apply To Be An Admin
-              </button>
-            </li>
-          </menu>
+        {!showApplicationForm ? (
+          <section>
+            <button onClick={handleUserContinue}>Continue as User</button>
+            <button onClick={handleApplyClick}>Apply To Be An Admin</button>
+          </section>
         ) : (
-          <form className="application-form" aria-label="Admin application form" onSubmit={(e) => {
-            e.preventDefault();
-            submitApplication();
-          }}>
-            <label htmlFor="admin-reason" className="visually-hidden">
-              Explain why you should be an admin
-            </label>
-            <textarea
-              id="admin-reason"
-              className="reason-input"
-              placeholder="Explain why you should be an admin..."
-              value={reason}
-              onChange={handleReasonChange}
-              rows={5}
-              required
-            />
-            <menu className="form-buttons">
-              <li>
-                <button 
-                  type="submit"
-                  className="submit-button" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Application"}
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button"
-                  className="cancel-button" 
-                  onClick={cancelApplication}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </button>
-              </li>
-            </menu>
+          <form onSubmit={submitApplication}>
+            <fieldset>
+              <legend>Admin Application</legend>
+              
+              <label>
+                Upload your CV (PDF)
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange(setCvFile)}
+                  required
+                />
+                {cvFile && <p>Selected: {cvFile.name}</p>}
+              </label>
+
+              <label>
+                Upload your Motivational Letter (PDF)
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange(setMotivationalLetterFile)}
+                  required
+                />
+                {motivationalLetterFile && <p>Selected: {motivationalLetterFile.name}</p>}
+              </label>
+
+              <menu>
+                <li>
+                  <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={cancelApplication} disabled={isSubmitting}>
+                    Cancel
+                  </button>
+                </li>
+              </menu>
+            </fieldset>
           </form>
         )}
       </article>
