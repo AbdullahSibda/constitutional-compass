@@ -7,6 +7,7 @@ import Search from './Search';
 import ContextMenu from './ContextMenu';
 import Delete from './Delete';
 import Filter from './Filter';
+import FileViewer from './FileViewer';
 import { documentTypes } from './documentTypes';
 import './FolderBrowser.css';
 
@@ -28,7 +29,9 @@ function FolderBrowser() {
   const [movingItem, setMovingItem] = useState(null);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [hasSearchResults, setHasSearchResults] = useState(false);
-  const [isFilterActive, setIsFilterActive] = useState(false); // New state to track filter activity
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [showFileViewer, setShowFileViewer] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     if (showUploadForm) return;
@@ -72,6 +75,13 @@ function FolderBrowser() {
     setPath([...path, { id: folderId, name: folderName }]);
   };
 
+  const handleViewFile = (item) => {
+    if (!item.is_folder) {
+      setSelectedFile(item);
+      setShowFileViewer(true);
+    }
+  };
+
   const isDescendant = (folderId, potentialParentId) => {
     if (folderId === potentialParentId) return true;
     const parent = contents.find(item => item.id === potentialParentId);
@@ -81,6 +91,10 @@ function FolderBrowser() {
 
   const handleMoveHere = async () => {
     if (!movingItem) return;
+    if (currentFolder === ROOT_FOLDER_ID) {
+      setError("Cannot move items into the Constitution Archive");
+      return;
+    }
     if (movingItem.is_folder && isDescendant(currentFolder, movingItem.id)) {
       setError("Cannot move a folder into its own subfolder");
       return;
@@ -338,8 +352,9 @@ function FolderBrowser() {
           <li>
             <button
               onClick={handleMoveHere}
-              disabled={loading || (movingItem.is_folder && isDescendant(currentFolder, movingItem.id))}
+              disabled={loading || (movingItem.is_folder && isDescendant(currentFolder, movingItem.id)) || currentFolder === ROOT_FOLDER_ID}
               className="move-button"
+              title={currentFolder === ROOT_FOLDER_ID ? "Moving items into Constitution Archive is not allowed" : ""}
             >
               Move Here
             </button>
@@ -464,10 +479,11 @@ function FolderBrowser() {
           loading={loading}
           showSearch={isSearchActive}
           hasSearchResults={hasSearchResults}
-          isFilterActive={isFilterActive} 
+          isFilterActive={isFilterActive}
           movingItem={movingItem}
           navigateToFolder={navigateToFolder}
           handleContextMenu={handleContextMenu}
+          handleViewFile={handleViewFile}
           contextMenu={contextMenu}
         />
       )}
@@ -533,15 +549,30 @@ function FolderBrowser() {
             setMovingItem(contextMenu.item);
             closeContextMenu();
           }}
+          onViewFile={() => {
+            if (!showFileViewer) {
+              handleViewFile(contextMenu.item);
+            }
+            closeContextMenu();
+          }}
           isDeleted={deletedItems.has(contextMenu.item?.id)}
           onClose={closeContextMenu}
+        />
+      )}
+      {showFileViewer && selectedFile && (
+        <FileViewer
+          file={selectedFile}
+          onClose={() => {
+            setShowFileViewer(false);
+            setSelectedFile(null);
+          }}
         />
       )}
     </article>
   );
 }
 
-export function ContentsDisplay({ contents, loading, showSearch, hasSearchResults, isFilterActive, movingItem, navigateToFolder, handleContextMenu, contextMenu }) {
+export function ContentsDisplay({ contents, loading, showSearch, hasSearchResults, isFilterActive, movingItem, navigateToFolder, handleContextMenu, handleViewFile, contextMenu }) {
   if (loading) {
     return <p className="loading-indicator">Loading contents...</p>;
   }
@@ -557,7 +588,11 @@ export function ContentsDisplay({ contents, loading, showSearch, hasSearchResult
                 <button
                   className={`item-main-action ${movingItem?.id === item.id ? 'moving-disabled' : ''}`}
                   disabled={loading || (movingItem && movingItem.id === item.id)}
-                  onClick={() => item.is_folder && navigateToFolder(item.id, item.name)}
+                  onClick={() => {
+                    if (item.is_folder) {
+                      navigateToFolder(item.id, item.name);
+                    }
+                  }}
                   aria-label={item.is_folder ? `Open folder ${item.name}` : `View file ${item.name}`}
                 >
                   {item.is_folder ? '📁' : '📄'} 
