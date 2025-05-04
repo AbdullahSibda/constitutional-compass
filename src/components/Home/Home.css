@@ -291,3 +291,158 @@ body {
     margin-top: 0.25rem;
   }
 }
+
+
+mark {
+  background-color: #368079;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-results {
+  margin-top: 2rem;
+}
+
+
+.snippets {
+  list-style: none;
+  padding: 0;
+}
+
+.snippet {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  
+}
+
+.score {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+[role="alert"] {
+  color: #d32f2f;
+}
+
+[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+.suggestion {
+  margin-top: 0.5px;
+  font-size: 1rem;
+  color: #368079;
+}
+
+/* Spell Check UI Styles */
+.input-error {
+  border: 2px solid #ff4d4f ;
+}
+
+.spelling-suggestions {
+
+  border-radius: 4px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.suggestion-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.suggestion-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.suggestion-button.primary {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+}
+
+.suggestion-button.primary:hover {
+  background-color: #40a9ff;
+}
+
+.suggestion-button.secondary {
+  background-color: transparent;
+  border: 1px solid #d9d9d9;
+  color: #40a9ff;
+}
+
+.suggestion-button.secondary:hover {
+  color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.corrected-message {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+/* Add these styles to your existing CSS */
+.spelling-suggestions {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.suggestion-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.suggestion-options li {
+  width: 100%;
+  max-width: 500px; /* Adjust as needed */
+}
+
+.suggestion-button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestion-button.primary {
+  background-color: #40a9ff;
+  color: white;
+  border: 1px solid #40a9ff;
+}
+
+.suggestion-button.secondary {
+  background-color: transparent;
+  color: #ccc;
+  border: 1px solid #ccc;
+}
+
+.suggestion-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 768px) {
+  .suggestion-options {
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .suggestion-options li {
+    width: auto;
+    flex: 0 1 auto;
+  }
+}
+

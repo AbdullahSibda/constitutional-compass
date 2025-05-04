@@ -1,11 +1,12 @@
 import React from "react";
 import "./SearchResults.css";
+import { highlightText } from "../utils/highlightText"; 
 
-const SearchResults = ({ results }) => {
+const SearchResults = ({ results, query }) => {
   return (
     <section className="search-results">
       {results.map((result, index) => (
-        <main key={index} className="result-card">
+        <article key={index} className="result-card"> {}
           <header className="result-header">
             <h3 className="result-title">{result.title}</h3>
             <a
@@ -19,7 +20,7 @@ const SearchResults = ({ results }) => {
           </header>
 
           {result.metadata && (
-            <section className="metadata-section">
+            <aside className="metadata-section"> {}
               {result.metadata.publication_date && (
                 <span className="metadata-item">
                   📅{" "}
@@ -33,20 +34,22 @@ const SearchResults = ({ results }) => {
                   📄 {result.metadata.document_type}
                 </span>
               )}
-            </section>
+            </aside>
           )}
 
           <section className="snippets-container">
             {result.snippets.map((snippet, idx) => (
-              <section key={idx} className="snippet">
-                <p className="snippet-text">{snippet.text}</p>
-                <section className="similarity-score">
+              <blockquote key={idx} className="snippet"> {}
+                <p className="snippet-text">
+                  {highlightText(snippet.text, query)} {}
+                </p>
+                <footer className="similarity-score"> {}
                   {Math.round((1 - snippet.score) * 100)}% match
-                </section>
-              </section>
+                </footer>
+              </blockquote>
             ))}
           </section>
-        </main>
+        </article>
       ))}
     </section>
   );
