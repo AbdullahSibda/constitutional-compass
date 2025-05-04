@@ -119,7 +119,7 @@ const SearchResults = ({ results }) => {
       </section>
 
       {/* Results display */}
-      <details className="search-results">
+      <section className="search-results">
         {filteredResults.length > 0 ? (
           groupByFileType ? (
             Object.entries(groupResultsByFileType()).map(([type, results]) => (
@@ -136,7 +136,7 @@ const SearchResults = ({ results }) => {
             No results match your filter criteria.
           </section>
         )}
-      </details>
+      </section>
     </main>
   );
 };
