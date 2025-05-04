@@ -3,6 +3,7 @@ import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
+import search from '../images/search.png';
 import SearchResults from "../SearchResults/SearchResults";
 
 const Home = () => {
@@ -113,7 +114,7 @@ const Home = () => {
               onChange={handleInputChange}
             />
             <button className="search-button" type="submit">
-              <img src="/images/search.png" alt="Search" />
+              <img src={search} alt="Search" />
             </button>
           </form>
         </article>

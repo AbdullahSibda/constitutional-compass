@@ -1,9 +1,80 @@
 /* SearchResults.css */
-.search-results {
+.search-results-container {
   width: 100%;
   max-width: 800px;
-  margin: 2rem auto;
+  margin: 0 auto;
   padding: 0 1rem;
+}
+
+/* Filters at the top */
+.filters-top-container {
+  width: 100%;
+  background: var(--dark);
+  padding: 1rem 0;
+}
+
+
+.filters-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group label {
+  font-family: var(--heading-font);
+  font-size: 0.9rem;
+  color: var(--light-grey);
+  font-weight: 500;
+}
+
+.year-range-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.year-range-group select {
+  flex: 1;
+}
+
+.year-range-group span {
+  font-family: var(--body-font);
+  color: var(--light-grey);
+  font-size: 0.85rem;
+}
+
+.filter-group select {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(197, 198, 199, 0.2);
+  background: var(--mid-dark);
+  color: var(--light-grey);
+  font-family: var(--body-font);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-group select:hover {
+  border-color: var(--teal-accent);
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--teal-accent);
+  box-shadow: 0 0 0 2px rgba(83, 199, 192, 0.2);
+}
+
+/* Rest of your existing styles... */
+.search-results {
+  padding-top: 1.5rem;
 }
 
 .result-card {
@@ -122,7 +193,31 @@
   gap: 0.25rem;
 }
 
+.no-results {
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--body-font);
+  font-size: 1rem;
+  color: var(--light-grey);
+  opacity: 0.8;
+  background: var(--mid-dark);
+  border-radius: 16px;
+  border: 1px solid rgba(197, 198, 199, 0.1);
+}
+
 /* Responsive Adjustments */
+@media (min-width: 768px) {
+  .filters-wrapper {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .filter-group {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .result-header {
     flex-direction: column;
@@ -162,4 +257,19 @@
   .metadata-item {
     font-size: 0.8rem;
   }
+
+  .filter-group select {
+    padding: 0.6rem 0.9rem;
+  }
+}
+.file-type-group {
+  margin-bottom: 2rem;
+}
+
+.file-type-heading {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 0.5rem;
 }
