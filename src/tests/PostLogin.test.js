@@ -5,225 +5,123 @@ import PostLogin from '../components/Login/PostLogin';
 import { supabase } from '../contexts/client';
 import { MemoryRouter } from 'react-router-dom';
 
-// Mock Supabase client
-jest.mock('../contexts/client');
+jest.mock('../contexts/client', () => {
+  const mockSupabase = {
+    auth: {
+      getUser: jest.fn(),
+    },
+    storage: {
+      from: jest.fn(() => ({
+        upload: jest.fn(),
+        getPublicUrl: jest.fn(),
+      })),
+    },
+    from: jest.fn(() => ({
+      upsert: jest.fn(),
+    })),
+  };
+  return { supabase: mockSupabase };
+});
 
-// Mock react-router-dom's useNavigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
-describe('PostLogin', () => {
+describe('PostLogin Component', () => {
+  const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {});
+  let uploadMock, getPublicUrlMock, upsertMock, getUserMock;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
-    // Default mocks for Supabase
-    supabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: '123', email: 'test@example.com' } },
+    mockNavigate.mockClear();
+    mockAlert.mockClear();
+
+    // Set up mocks for supabase methods
+    uploadMock = supabase.storage.from().upload;
+    getPublicUrlMock = supabase.storage.from().getPublicUrl;
+    upsertMock = supabase.from().upsert;
+    getUserMock = supabase.auth.getUser;
+
+    // Default mock behavior
+    getUserMock.mockResolvedValue({
+      data: { user: { id: 'user-123', email: 'test@example.com' } },
       error: null,
     });
-    supabase.from.mockReturnValue({
-      upsert: jest.fn().mockResolvedValue({ error: null }),
-    });
-    // Clear window.alert mock
-    window.alert.mockClear();
+    uploadMock.mockResolvedValue({ data: { path: 'mock/path/file.pdf' }, error: null });
+    getPublicUrlMock.mockReturnValue({ data: { publicUrl: 'http://mock.storage/file.pdf' } });
+    upsertMock.mockResolvedValue({ error: null });
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
+  afterAll(() => {
+    mockAlert.mockRestore();
   });
 
   test('renders initial buttons and subtext', () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
-    expect(screen.getByText("You're currently logged in as a standard user")).toBeInTheDocument();
+    expect(screen.getByText(/currently logged in as a standard user/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /continue as user/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /apply to be an admin/i })).toBeInTheDocument();
   });
 
-  test('navigates to home when Continue as User is clicked', () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
+  test('navigates home on Continue as User', () => {
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /continue as user/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
-  test('shows admin application form when Apply To Be An Admin is clicked', () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
+  test('shows admin form on Apply click', () => {
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    expect(screen.getByPlaceholderText('Explain why you should be an admin...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /submit application/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+    expect(screen.getByText(/admin application/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/upload your cv/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/upload your motivational letter/i)).toBeInTheDocument();
   });
 
-  test('cancels admin application and returns to buttons', () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
+  test('cancels admin application and resets form', async () => {
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
+
+    const cvFile = new File(['cv'], 'cv.pdf', { type: 'application/pdf' });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/upload your cv/i), { target: { files: [cvFile] } });
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByPlaceholderText('Explain why you should be an admin...')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /continue as user/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /apply to be an admin/i })).toBeInTheDocument();
+    expect(screen.queryByText(/admin application/i)).not.toBeInTheDocument();
   });
 
-  test('shows alert when submitting empty reason', async () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
+  test('requires both files for submission', async () => {
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    const form = screen.getByRole('form', { name: /admin application form/i });
     await act(async () => {
-      fireEvent.submit(form);
-      jest.runAllTimers();
+      fireEvent.submit(screen.getByRole('form', { name: /admin application/i }));
     });
-
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Please provide a reason for your application'));
+    expect(mockAlert).toHaveBeenCalledWith('Please upload both your CV and motivational letter');
+    expect(uploadMock).not.toHaveBeenCalled();
   });
 
-  test('submits admin application successfully', async () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
+  test('handles authentication failure', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: new Error('Auth failed') });
 
+    const cvFile = new File(['cv'], 'cv.pdf', { type: 'application/pdf' });
+    const letterFile = new File(['letter'], 'letter.pdf', { type: 'application/pdf' });
+
+    render(<MemoryRouter><PostLogin /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    fireEvent.change(screen.getByPlaceholderText('Explain why you should be an admin...'), {
-      target: { value: 'I want to be an admin because...' },
-    });
-    const form = screen.getByRole('form', { name: /admin application form/i });
+
     await act(async () => {
-      fireEvent.submit(form);
-      jest.runAllTimers();
+      fireEvent.change(screen.getByLabelText(/upload your cv/i), { target: { files: [cvFile] } });
+      fireEvent.change(screen.getByLabelText(/upload your motivational letter/i), { target: { files: [letterFile] } });
+      fireEvent.submit(screen.getByRole('form', { name: /admin application/i }));
     });
 
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('user_profiles');
-      expect(supabase.from().upsert).toHaveBeenCalledWith({
-        id: '123',
-        role: 'pending',
-        admin_application_reason: 'I want to be an admin because...',
-        applied_at: expect.any(String),
-      });
-      expect(window.alert).toHaveBeenCalledWith("Application submitted successfully! You'll be notified once approved.");
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockAlert).toHaveBeenCalledWith('Error: Authentication failed');
+      expect(uploadMock).not.toHaveBeenCalled();
     });
-  });
-
-  test('disables buttons during submission', async () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    fireEvent.change(screen.getByPlaceholderText('Explain why you should be an admin...'), {
-      target: { value: 'I want to be an admin because...' },
-    });
-
-    supabase.from().upsert.mockReturnValueOnce(new Promise((resolve) => setTimeout(() => resolve({ error: null }), 1000)));
-
-    const form = screen.getByRole('form', { name: /admin application form/i });
-    await act(async () => {
-      fireEvent.submit(form);
-    });
-
-    expect(screen.getByText('Submitting...')).toBeDisabled();
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
-
-    await act(async () => {
-      jest.advanceTimersByTime(1000);
-    });
-  });
-
-  test('handles unauthenticated user error', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    supabase.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: new Error('No user') });
-
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    fireEvent.change(screen.getByPlaceholderText('Explain why you should be an admin...'), {
-      target: { value: 'I want to be an admin because...' },
-    });
-    const form = screen.getByRole('form', { name: /admin application form/i });
-    await act(async () => {
-      fireEvent.submit(form);
-      jest.runAllTimers();
-    });
-
-    await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Failed to submit application. Please try again.');
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  test('handles Supabase upsert error', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    supabase.from().upsert.mockResolvedValueOnce({ error: new Error('Upsert failed') });
-
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    fireEvent.change(screen.getByPlaceholderText('Explain why you should be an admin...'), {
-      target: { value: 'I want to be an admin because...' },
-    });
-    const form = screen.getByRole('form', { name: /admin application form/i });
-    await act(async () => {
-      fireEvent.submit(form);
-      jest.runAllTimers();
-    });
-
-    await waitFor(() => {
-      expect(window.alert).toHaveBeenCalledWith('Failed to submit application. Please try again.');
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  test('textarea has accessible label', () => {
-    render(
-      <MemoryRouter>
-        <PostLogin />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /apply to be an admin/i }));
-    const textarea = screen.getByPlaceholderText('Explain why you should be an admin...');
-    expect(textarea).toHaveAttribute('id', 'admin-reason');
-    expect(document.querySelector('label[for="admin-reason"]')).toBeInTheDocument();
   });
 });

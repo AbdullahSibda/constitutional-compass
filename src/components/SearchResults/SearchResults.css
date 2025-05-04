@@ -192,6 +192,17 @@
   align-items: center;
   gap: 0.25rem;
 }
+.download-button {
+  background: rgba(69, 162, 158, 0.1);
+  color: #53c7c0;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+ 
+  
+  margin-top: 10px;
+}
 
 .no-results {
   padding: 2rem;
@@ -243,6 +254,7 @@
     margin-top: 0.5rem;
     width: fit-content;
   }
+  
 }
 
 @media (max-width: 480px) {

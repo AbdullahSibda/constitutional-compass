@@ -1,6 +1,6 @@
 import { deleteItem, restoreItem } from './Delete';
 
-export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDownload, onMove, onClose, isDeleted }) {
+export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDownload, onMove, onClose, isDeleted, onViewFile }) {
   const handleDelete = async () => {
     try {
       await deleteItem(item);
@@ -45,6 +45,13 @@ export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDo
             Move
           </button>
         </li>
+        {!item.is_folder && (
+          <li>
+            <button className="context-menu-item" onClick={() => { onViewFile(); onClose(); }}>
+              View File
+            </button>
+          </li>
+        )}
         <li>
           <button className="context-menu-item delete" onClick={isDeleted ? handleUndoDelete : handleDelete}>
             {isDeleted ? 'Undo Delete' : 'Delete'}

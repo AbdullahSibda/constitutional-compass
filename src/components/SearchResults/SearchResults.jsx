@@ -1,6 +1,26 @@
 import React, { useState } from "react";
 import "./SearchResults.css";
 
+
+const download = (result) => {
+  let content = `FROM: ${result.title} \n\n`;
+
+  result.snippets.forEach(snippet => {
+    const matchPercentage = Math.round((1 - snippet.score) * 100);
+    content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
+  });
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${result.title.replace(/\.pdf$/i, '')}_results.txt`; // remove .pdf if present
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
+
 const SearchResults = ({ results }) => {
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
   const [yearRange, setYearRange] = useState({ min: "", max: "" });
@@ -96,7 +116,7 @@ const SearchResults = ({ results }) => {
               </select>
             </section>
           </section>
-
+  
           <section className="filter-group">
             <label htmlFor="file-type-filter">Filter by File Type:</label>
             <section style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -117,7 +137,7 @@ const SearchResults = ({ results }) => {
           </section>
         </section>
       </section>
-
+  
       {/* Results display */}
       <section className="search-results">
         {filteredResults.length > 0 ? (
@@ -125,11 +145,85 @@ const SearchResults = ({ results }) => {
             Object.entries(groupResultsByFileType()).map(([type, results]) => (
               <section key={type} className="file-type-group">
                 <h2 className="file-type-heading">{type.toUpperCase()}</h2>
-                {results.map(renderResultCard)}
+                {results.map((result, index) => (
+                  <article key={index} className="result-card">
+                    <header className="result-header">
+                      <h3 className="result-title">{result.title}</h3>
+                      <a href={result.url} target="_blank" rel="noopener noreferrer" className="document-link">
+                        View Document
+                      </a>
+                    </header>
+  
+                    {result.metadata && (
+                      <section className="metadata-section">
+                        {result.metadata.year && (
+                          <strong className="metadata-item">📅 {result.metadata.year}</strong>
+                        )}
+                        {result.metadata.file_type && (
+                          <strong className="metadata-item">📄 {result.metadata.file_type}</strong>
+                        )}
+                      </section>
+                    )}
+  
+                    <section className="snippets-container">
+                      {result.snippets.map((snippet, idx) => (
+                        <section key={idx} className="snippet">
+                          <p className="snippet-text">{snippet.text}</p>
+                          <section className="similarity-score">
+                            {Math.round((1 - snippet.score) * 100)}% match
+                          </section>
+                        </section>
+                      ))}
+                    </section>
+  
+                    <section className="download-button-container">
+                      <button className="download-button" onClick={() => download(result)}>
+                        Download
+                      </button>
+                    </section>
+                  </article>
+                ))}
               </section>
             ))
           ) : (
-            filteredResults.map(renderResultCard)
+            filteredResults.map((result, index) => (
+              <article key={index} className="result-card">
+                <header className="result-header">
+                  <h3 className="result-title">{result.title}</h3>
+                  <a href={result.url} target="_blank" rel="noopener noreferrer" className="document-link">
+                    View Document
+                  </a>
+                </header>
+  
+                {result.metadata && (
+                  <section className="metadata-section">
+                    {result.metadata.year && (
+                      <strong className="metadata-item">📅 {result.metadata.year}</strong>
+                    )}
+                    {result.metadata.file_type && (
+                      <strong className="metadata-item">📄 {result.metadata.file_type}</strong>
+                    )}
+                  </section>
+                )}
+  
+                <section className="snippets-container">
+                  {result.snippets.map((snippet, idx) => (
+                    <section key={idx} className="snippet">
+                      <p className="snippet-text">{snippet.text}</p>
+                      <section className="similarity-score">
+                        {Math.round((1 - snippet.score) * 100)}% match
+                      </section>
+                    </section>
+                  ))}
+                </section>
+  
+                <section className="download-button-container">
+                  <button className="download-button" onClick={() => download(result)}>
+                    Download
+                  </button>
+                </section>
+              </article>
+            ))
           )
         ) : (
           <section className="no-results">
@@ -139,6 +233,7 @@ const SearchResults = ({ results }) => {
       </section>
     </main>
   );
+  
 };
 
 export default SearchResults;

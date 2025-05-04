@@ -1,0 +1,187 @@
+:root {
+    --mid-dark: #2d3748;
+    --white: #ffffff;
+    --light-grey: #e2e8f0;
+    --teal-accent: #38b2ac;
+    --dark-bg: #1a202c;
+    --red-accent: #ff5252;
+  }
+  
+  /* File Viewer Modal */
+  .file-viewer-modal {
+    background-color: var(--dark-bg);
+    color: var(--white);
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .file-viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .file-viewer-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--white);
+  }
+  
+  .file-viewer-header button {
+    background-color: transparent;
+    color: var(--white);
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .file-viewer-content {
+    padding: 1rem;
+    background-color: var(--mid-dark);
+    border-radius: 0.5rem;
+    overflow: auto;
+  }
+  
+  .file-viewer-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+  
+  .file-viewer-footer button {
+    background-color: var(--teal-accent);
+    color: var(--white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .file-viewer-footer button:hover {
+    background-color: #368079;
+  }
+  
+  /* Loading and Error States */
+  .loading, .error {
+    text-align: center;
+    color: var(--light-grey);
+    font-size: 1.125rem;
+    margin: 2rem 0;
+  }
+  
+  /* PDF Viewer */
+  .pdf-viewer {
+    max-width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+  }
+  
+  .pdf-viewer .pdf-page {
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Image Viewer */
+  .image-viewer img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 0.5rem;
+  }
+  
+  .image-viewer figcaption {
+    text-align: center;
+    color: var(--light-grey);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Text and Word Viewer */
+  .text-viewer pre, .word-viewer pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--light-grey);
+    font-size: 1rem;
+    line-height: 1.5;
+    background-color: var(--mid-dark);
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .text-viewer pre {
+    font-family: monospace;
+  }
+  
+  .word-viewer pre {
+    font-family: 'Times New Roman', Times, serif;
+  }
+  
+  /* Excel Viewer */
+  .excel-viewer table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .excel-viewer table td {
+    padding: 0.5rem;
+    border: 1px solid var(--light-grey);
+    text-align: center;
+  }
+  
+  .excel-viewer figcaption {
+    text-align: center;
+    color: var(--light-grey);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Unsupported File Type */
+  .unsupported-viewer {
+    text-align: center;
+    color: var(--light-grey);
+    font-size: 1.125rem;
+  }
+  
+  /* Responsive Adjustments */
+  @media (min-width: 48rem) {
+    .file-viewer-modal {
+      width: 80%;
+      max-width: 900px;
+      padding: 3rem;
+    }
+  
+    .file-viewer-header h2 {
+      font-size: 1.5rem;
+    }
+  
+    .file-viewer-footer button {
+      font-size: 1.125rem;
+    }
+  
+    .file-viewer-content {
+      padding: 2rem;
+    }
+  }
+  
+  @media (min-width: 64rem) {
+    .file-viewer-modal {
+      width: 70%;
+      max-width: 1000px;
+    }
+  
+    .file-viewer-header h2 {
+      font-size: 1.75rem;
+    }
+  
+    .file-viewer-footer button {
+      font-size: 1.25rem;
+    }
+  }
+  

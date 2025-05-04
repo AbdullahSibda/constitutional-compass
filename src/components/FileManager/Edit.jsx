@@ -70,6 +70,7 @@ const documentOptions = {
       displayName: false,
       documentType: false
     });
+    const [existingNames, setExistingNames] = useState([]);
   
     const getCategoryFromDocumentType = useCallback((docType) => {
       for (const [category, options] of Object.entries(documentOptions)) {
@@ -90,7 +91,27 @@ const documentOptions = {
           author: item.metadata?.author || ''
         });
         setSelectedCategory(getCategoryFromDocumentType(item.metadata?.type || ''));
-      }   
+      }  
+      
+      // Fetch existing names in the same parent directory
+      const fetchExistingNames = async () => {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('name, metadata')
+          .eq('parent_id', item.parent_id)
+          .neq('id', item.id); // Exclude current item
+        
+        if (!error && data) {
+          const names = data.map(item => {
+            return item.is_folder 
+              ? item.name.toLowerCase()
+              : (item.metadata?.displayName || item.name).toLowerCase();
+          });
+          setExistingNames(names);
+        }
+      };
+
+      fetchExistingNames();
     }, [item, getCategoryFromDocumentType]);
   
     // Escape key handler
@@ -129,6 +150,11 @@ const documentOptions = {
           setError('Folder name is required');
           return false;
         }
+        if (folderName.toLowerCase() !== item.name.toLowerCase() && 
+        existingNames.includes(folderName.toLowerCase())) {
+          setError('A folder with this name already exists');
+          return false;
+        }
       } else {
         setTouched({ displayName: true, documentType: true });
         if (!metadata.displayName.trim()) {
@@ -137,6 +163,12 @@ const documentOptions = {
         }
         if (!metadata.documentType) {
           setError('Document type is required');
+          return false;
+        }
+        const currentDisplayName = item.metadata?.displayName || item.name;
+        if (metadata.displayName.toLowerCase() !== currentDisplayName.toLowerCase() && 
+        existingNames.includes(metadata.displayName.toLowerCase())) {
+          setError('A document with this name already exists');
           return false;
         }
       }
@@ -152,6 +184,8 @@ const documentOptions = {
     };
   
     const updateDocument = async () => {
+      const fileExtension = item.name.split('.').pop();
+      const newFileName = `${metadata.displayName}.${fileExtension}`;
       const updatedMetadata = {
         ...item.metadata,
         displayName: metadata.displayName,
@@ -163,7 +197,7 @@ const documentOptions = {
       const { error: dbError } = await supabase
         .from('documents')
         .update({
-          name: metadata.displayName,
+          name: newFileName,
           metadata: updatedMetadata
         })
         .eq('id', item.id);
@@ -208,11 +242,24 @@ const documentOptions = {
             onBlur={handleBlur}
             placeholder="Folder name"
             required
-            aria-invalid={touched.folderName && !folderName.trim()}
-            aria-describedby={touched.folderName && !folderName.trim() ? "folderName-error" : undefined}
+            aria-invalid={touched.folderName && (!folderName.trim() || 
+              (folderName.toLowerCase() !== item.name.toLowerCase() && 
+               existingNames.includes(folderName.toLowerCase())))}
+            aria-describedby={
+              touched.folderName && (!folderName.trim() || 
+                (folderName.toLowerCase() !== item.name.toLowerCase() && 
+                 existingNames.includes(folderName.toLowerCase()))) 
+                ? "folderName-error" 
+                : undefined
+            }
           />
           {touched.folderName && !folderName.trim() && (
             <p id="folderName-error" className="error-text">Folder name is required</p>
+          )}
+          {touched.folderName && folderName.trim() && 
+          folderName.toLowerCase() !== item.name.toLowerCase() && 
+          existingNames.includes(folderName.toLowerCase()) && (
+            <p id="folderName-error" className="error-text">A folder with this name already exists</p>
           )}
         </section>
       </>
@@ -232,12 +279,29 @@ const documentOptions = {
             onBlur={handleBlur}
             placeholder="Friendly name for display"
             required
-            aria-invalid={touched.displayName && !metadata.displayName.trim()}
-            aria-describedby={touched.displayName && !metadata.displayName.trim() ? "displayName-error" : undefined}
+            aria-invalid={
+              touched.displayName && 
+              (!metadata.displayName.trim() || 
+               (metadata.displayName.toLowerCase() !== (item.metadata?.displayName || item.name).toLowerCase() && 
+                existingNames.includes(metadata.displayName.toLowerCase())))
+            }
+            aria-describedby={
+              touched.displayName && 
+              (!metadata.displayName.trim() || 
+               (metadata.displayName.toLowerCase() !== (item.metadata?.displayName || item.name).toLowerCase() && 
+                existingNames.includes(metadata.displayName.toLowerCase())))
+                ? "displayName-error" 
+                : undefined
+            }
           />
           {touched.displayName && !metadata.displayName.trim() && (
             <p id="displayName-error" className="error-text">Display name is required</p>
           )}
+          {touched.displayName && metadata.displayName.trim() && 
+            metadata.displayName.toLowerCase() !== (item.metadata?.displayName || item.name).toLowerCase() && 
+            existingNames.includes(metadata.displayName.toLowerCase()) && (
+              <p id="displayName-error" className="error-text">A document with this name already exists</p>
+            )}
         </section>
   
         <section className="form-group">

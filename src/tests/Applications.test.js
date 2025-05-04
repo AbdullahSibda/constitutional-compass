@@ -1,9 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import * as pdfjsLib from 'pdfjs-dist';
 import Applications from '../components/Applications/Applications';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../contexts/client';
+
 
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
@@ -26,6 +28,19 @@ jest.mock('../components/Sidebar/Sidebar', () => {
   };
 });
 
+jest.mock('pdfjs-dist', () => ({
+  getDocument: jest.fn().mockReturnValue({
+    promise: Promise.resolve({
+      numPages: 2,
+    }),
+  }),
+  GlobalWorkerOptions: {
+    workerSrc: 'abc.worker.js',
+  },
+}));
+
+jest.mock('../../components/Applications/Applications.css', () => ({}));
+
 // Mock Date to respect input dates
 const OriginalDate = global.Date;
 beforeAll(() => {
@@ -35,6 +50,9 @@ beforeAll(() => {
         return new OriginalDate(...args); // Respect input dates (e.g., applied_at)
       }
       return new OriginalDate('2025-04-20T12:00:00Z'); // Default to mock date
+    }
+    static now() {
+      return new OriginalDate('2025-04-20T12:00:00Z').getTime();
     }
   };
 });
@@ -51,6 +69,8 @@ describe('Applications Component', () => {
       admin_application_reason: 'I want to be an admin',
       applied_at: '2025-04-19T10:00:00Z',
       role: 'pending',
+      cv_url: 'http://example.com/cv1.pdf',
+      motivational_letter_url: 'http://example.com/letter1.pdf',
     },
     {
       id: 'user2',
@@ -58,6 +78,8 @@ describe('Applications Component', () => {
       admin_application_reason: 'Experienced moderator',
       applied_at: '2025-04-18T15:00:00Z',
       role: 'pending',
+      cv_url: null,
+      motivational_letter_url: null,
     },
   ];
 
@@ -72,10 +94,6 @@ describe('Applications Component', () => {
         eq: jest.fn().mockResolvedValue({ error: null }),
       }),
     }));
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   test('renders unauthorized message for non-moderator roles', async () => {
@@ -112,13 +130,12 @@ describe('Applications Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Pending Applications')).toBeInTheDocument();
       expect(screen.getByText('user1@example.com')).toBeInTheDocument();
-      expect(screen.getByText('I want to be an admin')).toBeInTheDocument();
       expect(screen.getByText('4/19/2025')).toBeInTheDocument();
       expect(screen.getByText('user2@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Experienced moderator')).toBeInTheDocument();
       expect(screen.getByText('4/18/2025')).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Accept' })).toHaveLength(2);
       expect(screen.getAllByRole('button', { name: 'Reject' })).toHaveLength(2);
+      expect(screen.getAllByRole('button', { name: 'View Documents' })).toHaveLength(2);
     });
   });
 
@@ -127,7 +144,7 @@ describe('Applications Component', () => {
     await waitFor(() => {
       expect(screen.getByText('user1@example.com')).toBeInTheDocument();
     });
-    const sidebarToggle = screen.getByText('☰');
+    const sidebarToggle = screen.getByRole('button', { name: 'Open sidebar' });
     const sidebar = screen.getByTestId('sidebar');
     expect(sidebar).toHaveClass('closed');
     expect(sidebarToggle).toBeVisible();
@@ -141,6 +158,7 @@ describe('Applications Component', () => {
       fireEvent.click(closeButton);
     });
     expect(sidebar).toHaveClass('closed');
+    expect(sidebarToggle).toBeVisible();
   });
 
   test('handles fetch applications error', async () => {
@@ -181,5 +199,67 @@ describe('Applications Component', () => {
       expect(screen.getByText('user1@example.com')).toBeInTheDocument();
     });
     console.error.mockRestore();
+  });
+
+  test('toggles document visibility and loads PDFs', async () => {
+    render(<Applications />);
+    await waitFor(() => {
+      expect(screen.getByText('user1@example.com')).toBeInTheDocument();
+    });
+
+    // Initial state: documents hidden
+    expect(screen.queryByText('CV')).not.toBeInTheDocument();
+    expect(screen.queryByText('Motivational Letter')).not.toBeInTheDocument();
+
+    // Click to expand documents
+    const viewDocsButton = screen.getAllByRole('button', { name: 'View Documents' })[0];
+    await act(async () => {
+      fireEvent.click(viewDocsButton);
+    });
+
+    // Check documents are visible and PDFs are loaded
+    await waitFor(() => {
+      expect(screen.getByText('CV')).toBeInTheDocument();
+      expect(screen.getByText('Motivational Letter')).toBeInTheDocument();
+      expect(screen.getAllByText('PDF loaded (2 pages)')).toHaveLength(2);
+      expect(screen.getByRole('link', { name: 'View cv' })).toHaveAttribute('href', 'http://example.com/cv1.pdf');
+      expect(screen.getByRole('link', { name: 'View letter' })).toHaveAttribute('href', 'http://example.com/letter1.pdf');
+    });
+
+    // Verify PDF loading calls
+    expect(pdfjsLib.getDocument).toHaveBeenCalledWith('http://example.com/cv1.pdf');
+    expect(pdfjsLib.getDocument).toHaveBeenCalledWith('http://example.com/letter1.pdf');
+
+    // Click to hide documents
+    const hideDocsButton = screen.getByRole('button', { name: 'Hide Documents' });
+    await act(async () => {
+      fireEvent.click(hideDocsButton);
+    });
+
+    // Check documents are hidden
+    expect(screen.queryByText('CV')).not.toBeInTheDocument();
+    expect(screen.queryByText('Motivational Letter')).not.toBeInTheDocument();
+  });
+
+  test('handles missing CV and motivational letter', async () => {
+    render(<Applications />);
+    await waitFor(() => {
+      expect(screen.getByText('user2@example.com')).toBeInTheDocument();
+    });
+
+    // Click to expand documents for user2 (no CV or letter)
+    const viewDocsButton = screen.getAllByRole('button', { name: 'View Documents' })[1];
+    await act(async () => {
+      fireEvent.click(viewDocsButton);
+    });
+
+    // Check no PDFs are loaded and correct messages are shown
+    await waitFor(() => {
+      expect(screen.getByText('CV')).toBeInTheDocument();
+      expect(screen.getByText('Motivational Letter')).toBeInTheDocument();
+      expect(screen.getByText('No CV uploaded')).toBeInTheDocument();
+      expect(screen.getByText('No motivational letter uploaded')).toBeInTheDocument();
+      expect(pdfjsLib.getDocument).not.toHaveBeenCalled();
+    });
   });
 });

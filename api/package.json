@@ -9,7 +9,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "cors": "^2.8.5",
@@ -19,5 +18,6 @@
     "openai": "^4.96.0",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^3.9.179"
-  }
+  },
+  "description": ""
 }
