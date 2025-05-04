@@ -89,7 +89,7 @@ const PostLogin = () => {
             <button onClick={handleApplyClick}>Apply To Be An Admin</button>
           </section>
         ) : (
-          <form onSubmit={submitApplication}>
+          <form onSubmit={submitApplication} aria-label="Admin Application Form">
             <fieldset>
               <legend>Admin Application</legend>
               

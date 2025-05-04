@@ -7,7 +7,14 @@ describe('Supabase Client', () => {
   test('initializes with correct URL and key', () => {
     expect(createClient).toHaveBeenCalledWith(
       'https://mock-supabase-url.supabase.co',
-      'mock-anon-key'
+      'mock-anon-key',
+      {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          storage: localStorage
+        }
+      }
     );
     expect(supabase).toBeDefined();
   });

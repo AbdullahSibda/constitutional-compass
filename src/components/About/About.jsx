@@ -12,6 +12,7 @@ function About() {
           className="sidebar-toggle"
           onClick={() => setIsSidebarOpen(true)}
           style={{ display: isSidebarOpen ? 'none' : 'block' }}
+          data-testid="sidebar-toggle"
         >
           ☰
         </button>

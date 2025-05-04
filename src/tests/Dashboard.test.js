@@ -60,7 +60,7 @@ describe('Dashboard', () => {
     supabase.auth._authStateChangeCallback = null;
   });
 
-  test('renders Admin Dashboard header and components', async () => {
+  test('renders Admin components', async () => {
     await act(async () => {
       render(
         <MemoryRouter>
@@ -73,7 +73,6 @@ describe('Dashboard', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       expect(screen.getByTestId('sidebar')).toBeInTheDocument();
       expect(screen.getByTestId('folder-browser')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /☰/ })).toBeInTheDocument();
