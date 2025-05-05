@@ -23,11 +23,10 @@ export const highlightText = (text, query) => {
   const parts = text.split(regex);
   
   return parts.map((part, index) => {
-    if (!part) return null;
-    
+    if (!part) return null; 
     const isMatch = cleanedTerms.some(term => 
       new RegExp(`\\b${term}\\b`, 'i').test(part)
     );
     return isMatch ? <mark key={index}>{part}</mark> : part;
-  });
+  }).filter(part => part !== null);
 };

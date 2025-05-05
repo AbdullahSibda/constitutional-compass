@@ -26,7 +26,7 @@ const SearchResults = ({ results, query }) => {
   const [yearRange, setYearRange] = useState({ min: "", max: "" });
   const [groupByFileType, setGroupByFileType] = useState(false);
 
-  const allYears = [...new Set(results.map((r) => r.metadata?.year))].filter(Boolean).sort();
+  const allYears = [...new Set(results.map((r) => r.metadata?.year))].filter(Boolean).sort((a, b) => a - b);
   const allFileTypes = [...new Set(results.map((r) => r.metadata?.file_type))].filter(Boolean);
 
   const filteredResults = results.filter((result) => {

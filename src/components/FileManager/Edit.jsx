@@ -232,7 +232,7 @@ const documentOptions = {
       <>
         <legend>Folder Properties</legend>
         <section className="form-group">
-          <label htmlFor="name">Folder Name *</label>
+          <label htmlFor="folderName">Folder Name *</label>
           <input
             type="text"
             id="folderName"

@@ -3,7 +3,6 @@ import "./Home.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
-import search from '../images/search.png';
 import SearchResults from "../SearchResults/SearchResults";
 import { getCorrection } from "../../api/thirdParty/dymtService";
 import { initializeDictionary } from "../utils/spellCheck";
@@ -42,7 +41,8 @@ const Home = () => {
         }
       }
     } catch (err) {
-      return false;
+      console.error('Failed to initialize dictionary or check words:', err);
+      throw err;
     }
     
     setMisspelledWords(misspellings);
@@ -81,6 +81,7 @@ const Home = () => {
             return;
           }
         } catch (err) {
+          console.error("Failed to fetch spelling correction:", err);
           setError("Spell check unavailable. Using original query...");
         } finally {
           setIsCheckingSpelling(false);
@@ -129,7 +130,8 @@ const Home = () => {
       setResults(data.results || []);
       setDisplayQuery(displayQuery);
     } catch (err) {
-      throw err;
+      console.error("Error occurred during search:", err);
+      setError("There was an issue with your search. Please try again.");
     }
   };
 
@@ -215,7 +217,6 @@ const Home = () => {
             <p aria-busy="true" className="loading-indicator">Searching...</p>
           )}
           
-          {/* In your JSX (unchanged from your last version) */}
         {suggestion && (
           <aside className="spelling-suggestions">
             <p>Possible spelling errors in: 
