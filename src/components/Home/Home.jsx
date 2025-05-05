@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import Sidebar from "../Sidebar/Sidebar";
 import SearchResults from "../SearchResults/SearchResults";
-import { getCorrection } from "../utils/dymtService";
+import { getCorrection } from "../../api/thirdParty/dymtService";
 import { initializeDictionary } from "../utils/spellCheck";
 
 const Home = () => {
