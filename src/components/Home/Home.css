@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@500;600&display=swap");
 
 :root {
-  --heading-font: 'Work Sans', sans-serif;
-  --body-font: 'Inter', sans-serif;
-  --dark-bg: #0B0C10;
-  --mid-dark: #1F2833;
-  --light-grey: #C5C6C7;
-  --teal-accent: #45A29E;
+  --heading-font: "Work Sans", sans-serif;
+  --body-font: "Inter", sans-serif;
+  --dark-bg: #0b0c10;
+  --mid-dark: #1f2833;
+  --light-grey: #c5c6c7;
+  --teal-accent: #45a29e;
   --white: #ffffff;
 }
 
@@ -25,19 +25,19 @@ body {
   display: flex;
   height: 100vh; /* Explicitly set to viewport height */
   min-height: 100vh; /* Fallback for older browsers */
-  max-height: 100vh; /* Prevent scrolling */
   overflow: hidden;
 }
 
 .main-content {
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center !important; /* Force vertical centering */
   padding: clamp(0.5rem, 2vw, 1rem);
   text-align: center;
   margin-left: 20rem;
-  height: 100%; /* Full height of app-container */
+  height: 100%; /* Restore height property */
   overflow-y: auto;
   transition: margin-left 0.3s ease;
 }
@@ -75,6 +75,7 @@ body {
   align-items: center;
   padding: 1rem;
   gap: 1.5rem;
+  min-height: min-content;
 }
 
 .home-header {
@@ -128,6 +129,11 @@ body {
   transform: none; /* Remove fixed transform */
 }
 
+.search-results-container {
+  width: 100%;
+  max-width: clamp(300px, 90vw, 800px);
+  margin: 0 auto;
+}
 
 .search-container {
   position: relative;
@@ -138,7 +144,8 @@ body {
 
 .search-input {
   width: 100%;
-  padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 4vw, 3rem) clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 4vw, 3rem)
+    clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1.5rem);
   border: none;
   border-radius: 999px;
   font-family: var(--body-font);
@@ -162,8 +169,8 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  width: clamp(20px, 4vw, 28px);
-  height: clamp(20px, 4vw, 28px);
+  width: clamp(40px, 4vw, 48px);
+  height: clamp(40px, 4vw, 48px);
   padding: 0;
   transition: transform 0.2s ease;
 }
@@ -218,11 +225,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; 
+  height: 100vh;
   width: 100%;
-  background-color: var(--dark-bg); 
-  color: var(--teal-accent); 
-  font-family: var(--heading-font); 
+  background-color: var(--dark-bg);
+  color: var(--teal-accent);
+  font-family: var(--heading-font);
   font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 600;
   text-align: center;
@@ -251,17 +258,15 @@ body {
   .header-logo {
     width: clamp(5rem, 20vw, 6rem);
   }
-  
+
   .header-title {
     font-size: clamp(1.8rem, 8vw, 2.5rem);
   }
-  
+
   .slogan {
     font-size: clamp(1rem, 5vw, 1.5rem);
   }
 }
-
-
 
 @media (max-width: 480px) {
   .main-content {
@@ -277,12 +282,167 @@ body {
   .hero-section {
     gap: 1rem;
   }
-  
+
   .header-title {
     font-size: clamp(1.5rem, 9vw, 2rem);
   }
-  
+
   .slogan {
     margin-top: 0.25rem;
   }
 }
+
+
+mark {
+  background-color: #368079;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-results {
+  margin-top: 2rem;
+}
+
+
+.snippets {
+  list-style: none;
+  padding: 0;
+}
+
+.snippet {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  
+}
+
+.score {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+[role="alert"] {
+  color: #d32f2f;
+}
+
+[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+.suggestion {
+  margin-top: 0.5px;
+  font-size: 1rem;
+  color: #368079;
+}
+
+/* Spell Check UI Styles */
+.input-error {
+  border: 2px solid #ff4d4f ;
+}
+
+.spelling-suggestions {
+
+  border-radius: 4px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.suggestion-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.suggestion-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.suggestion-button.primary {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+}
+
+.suggestion-button.primary:hover {
+  background-color: #40a9ff;
+}
+
+.suggestion-button.secondary {
+  background-color: transparent;
+  border: 1px solid #d9d9d9;
+  color: #40a9ff;
+}
+
+.suggestion-button.secondary:hover {
+  color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.corrected-message {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+/* Add these styles to your existing CSS */
+.spelling-suggestions {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.suggestion-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.suggestion-options li {
+  width: 100%;
+  max-width: 500px; /* Adjust as needed */
+}
+
+.suggestion-button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestion-button.primary {
+  background-color: #40a9ff;
+  color: white;
+  border: 1px solid #40a9ff;
+}
+
+.suggestion-button.secondary {
+  background-color: transparent;
+  color: #ccc;
+  border: 1px solid #ccc;
+}
+
+.suggestion-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 768px) {
+  .suggestion-options {
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .suggestion-options li {
+    width: auto;
+    flex: 0 1 auto;
+  }
+}
+

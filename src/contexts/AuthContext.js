@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "./client";
 
 const AuthContext = createContext();
@@ -8,8 +8,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const refreshRef = useRef();
 
-  const fetchUserRole = async (userId) => {
+  const fetchUserRole = useCallback(async (userId) => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -18,74 +19,87 @@ export function AuthProvider({ children }) {
         .single();
       
       if (error) throw error;
-      return data?.role || 'user'; 
+      return data?.role || 'user';
     } catch (error) {
       console.error('Error fetching user role:', error);
       return 'user';
     }
-  };
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data: { session: newSession }, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+      
+      if (newSession?.user) {
+        const role = await fetchUserRole(newSession.user.id);
+        setSession(newSession);
+        setUser(newSession.user);
+        setUserRole(role);
+      } else {
+        setSession(null);
+        setUser(null);
+        setUserRole(null);
+      }
+    } catch (error) {
+      console.error('Session refresh error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchUserRole]);
+
+  // Store refreshSession in ref
+  useEffect(() => {
+    refreshRef.current = refreshSession;
+  }, [refreshSession]);
 
   useEffect(() => {
     let isMounted = true;
     let authListener;
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshRef.current?.();
+      }
+    };
 
     const initializeAuth = async () => {
       try {
-        // First check for existing session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          throw error;
-        }
+        await refreshSession();
 
-        if (session?.user) {
-          const role = await fetchUserRole(session.user.id);
-          if (isMounted) {
-            setSession(session);
-            setUser(session.user);
-            setUserRole(role);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!isMounted) return;
+            refreshRef.current?.();
           }
-        }
+        );
+        authListener = subscription;
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
       } catch (error) {
         console.error('Auth initialization error:', error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
-
-      // Then set up the auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (!isMounted) return;
-
-          if (session?.user) {
-            const role = await fetchUserRole(session.user.id);
-            setSession(session);
-            setUser(session.user);
-            setUserRole(role);
-          } else {
-            setSession(null);
-            setUser(null);
-            setUserRole(null);
-          }
-          setLoading(false);
-        }
-      );
-      authListener = subscription;
     };
 
     initializeAuth();
 
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshRef.current?.();
+      }
+    }, 5 * 60 * 1000);
+
     return () => {
       isMounted = false;
       authListener?.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
     };
-  }, []);
+  }, [refreshSession]);
 
+  // Rest of the component remains the same
   const siteUrl =
     window.location.hostname === "localhost"
       ? "http://localhost:3000"
@@ -116,7 +130,8 @@ export function AuthProvider({ children }) {
       signIn, 
       signOut, 
       supabase, 
-      loading 
+      loading,
+      refreshSession
     }}>
       {children}
     </AuthContext.Provider>

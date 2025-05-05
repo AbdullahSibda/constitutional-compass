@@ -1,86 +1,215 @@
+:root {
+  --mid-dark: #2d3748;
+  --white: #ffffff;
+  --light-grey: #e2e8f0;
+  --teal-accent: #38b2ac;
+  --dark-bg: #1a202c;
+  --red-accent: #ff5252;
+}
+
 .applications-layout {
   display: flex;
   min-height: 100vh;
+  background-color: var(--dark-bg);
+  color: var(--white);
 }
 
 .applications-container {
+  flex: 1;
+  padding: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.applications-container header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Applications list */
+.applications-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.application-card {
+  background-color: var(--mid-dark);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.application-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.application-info header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.application-info h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--white);
+}
+
+.application-info p {
+  margin: 0;
+  color: var(--light-grey);
+  font-size: 0.9rem;
+}
+
+.toggle-expand {
+  background-color: transparent;
+  color: var(--teal-accent);
+  border: 1px solid var(--teal-accent);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.toggle-expand:hover {
+  background-color: rgba(56, 178, 172, 0.1);
+}
+
+/* Documents container */
+.documents-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.document-viewer {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  border-radius: 0.25rem;
+}
+
+.document-viewer h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--teal-accent);
+  font-size: 1rem;
+}
+
+.pdf-document {
+  margin: 0.5rem 0;
+  border: 1px solid var(--light-grey);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.pdf-page {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.pdf-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.pdf-controls button {
+  background-color: var(--mid-dark);
+  color: var(--white);
+  border: 1px solid var(--light-grey);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.pdf-controls p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Application actions */
+.application-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.accept-button, .reject-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.accept-button {
+  background-color: var(--teal-accent);
+  color: var(--white);
+}
+
+.accept-button:hover {
+  background-color: #368079;
+}
+
+.reject-button {
+  background-color: var(--red-accent);
+  color: var(--white);
+}
+
+.reject-button:hover {
+  background-color: #e04848;
+}
+
+/* Status messages */
+.unauthorized, .loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--light-grey);
+}
+
+/* Responsive adjustments */
+@media (min-width: 48rem) {
+  .applications-container {
     padding: 2rem;
+  }
+
+  .documents-container {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .application-info h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .applications-container {
     max-width: 1200px;
-    margin: 0 auto;
   }
-  
-  .applications-list {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    gap: 1rem;
-  }
-  
-  .application-card {
-    background-color: var(--mid-dark);
-    border-radius: 8px;
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .application-info h3 {
-    margin: 0 0 0.5rem 0;
-    color: var(--white);
-  }
-  
-  .application-info p {
-    margin: 0.25rem 0;
-    color: var(--light-grey);
-  }
-  
-  .application-actions {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .accept-button, .reject-button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-  
-  .accept-button {
-    background-color: var(--teal-accent);
-    color: var(--white);
-  }
-  
-  .accept-button:hover {
-    background-color: #368079;
-  }
-  
-  .reject-button {
-    background-color: #ff5252;
-    color: var(--white);
-  }
-  
-  .reject-button:hover {
-    background-color: #e04848;
-  }
-  
-  .loading, .unauthorized {
-    text-align: center;
-    padding: 2rem;
-    color: var(--light-grey);
-  }
-  
-  @media (max-width: 768px) {
-    .application-card {
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    .application-actions {
-      width: 100%;
-      justify-content: flex-end;
-    }
-  }
+}
