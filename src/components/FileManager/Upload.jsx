@@ -173,10 +173,9 @@ export default function Upload({
       console.log("hitting processResponse");
 
       const processRespnse = await fetch(
-        "http://localhost:4000/api/process-document",
+        "https://constitutional-compass-function-app.azurewebsites.net/api/process-document",
         {
           method: "POST",
-          mode: "cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             documentId, // from your supabase insert
