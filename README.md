@@ -17,7 +17,6 @@
 - All tests go in `src/tests/`  
 - Always run `npm test` locally first
 - Run  `start coverage\lcov-report\index.html` to view a coverage report for the tests
-- Absolutely no `div` elements allowed  
 - Fix all test failures before pushing  
 
 ## Team Rules  
