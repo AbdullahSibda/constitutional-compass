@@ -24,4 +24,4 @@
 - Verify tests pass before any push to `dev`  
 
 ## Backend Rules
-- Add all backend code to the api repo, not this one
+- Add all backend code to the api repo - constitutional-compass-api
