@@ -11,6 +11,7 @@ describe('ContextMenu Component', () => {
   const mockOnDownload = jest.fn();
   const mockOnMove = jest.fn();
   const mockOnClose = jest.fn();
+  const mockOnViewFile = jest.fn();
 
   const fileItem = {
     id: 'file1',
@@ -39,6 +40,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
@@ -46,10 +48,11 @@ describe('ContextMenu Component', () => {
     expect(screen.getByRole('button', { name: /Edit Metadata/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Download/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Move/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete File/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /View File/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
   });
 
-  test('renders context menu for a folder without download option', async () => {
+  test('renders context menu for a folder without download or view file options', async () => {
     render(
       <ContextMenu
         item={folderItem}
@@ -60,14 +63,16 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
     expect(screen.getByRole('list', { name: /Item actions/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Edit Metadata/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Download/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /View File/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Move/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete Folder/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
   });
 
   test('renders Undo Delete button when item is deleted', async () => {
@@ -81,11 +86,12 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={true}
+        onViewFile={mockOnViewFile}
       />
     );
 
     expect(screen.getByRole('button', { name: /Undo Delete/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Delete File/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Delete$/i })).not.toBeInTheDocument();
   });
 
   test('calls onEdit and onClose when Edit Metadata is clicked', async () => {
@@ -100,6 +106,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
@@ -121,12 +128,35 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
     await user.click(screen.getByRole('button', { name: /Download/i }));
 
     expect(mockOnDownload).toHaveBeenCalledTimes(1);
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  test('calls onViewFile and onClose when View File is clicked for a file', async () => {
+    const user = userEvent.setup();
+    render(
+      <ContextMenu
+        item={fileItem}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onUndoDelete={mockOnUndoDelete}
+        onDownload={mockOnDownload}
+        onMove={mockOnMove}
+        onClose={mockOnClose}
+        isDeleted={false}
+        onViewFile={mockOnViewFile}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /View File/i }));
+
+    expect(mockOnViewFile).toHaveBeenCalledTimes(1);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
@@ -142,6 +172,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
@@ -151,7 +182,7 @@ describe('ContextMenu Component', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onDelete and onClose when Delete File is clicked', async () => {
+  test('calls onDelete and onClose when Delete is clicked for a file', async () => {
     const user = userEvent.setup();
     render(
       <ContextMenu
@@ -163,16 +194,17 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Delete File/i }));
+    await user.click(screen.getByRole('button', { name: /Delete/i }));
 
     expect(mockOnDelete).toHaveBeenCalledTimes(1);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onDelete and onClose when Delete Folder is clicked', async () => {
+  test('calls onDelete and onClose when Delete is clicked for a folder', async () => {
     const user = userEvent.setup();
     render(
       <ContextMenu
@@ -184,10 +216,11 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /Delete Folder/i }));
+    await user.click(screen.getByRole('button', { name: /Delete/i }));
 
     expect(mockOnDelete).toHaveBeenCalledTimes(1);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -205,6 +238,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={true}
+        onViewFile={mockOnViewFile}
       />
     );
 
@@ -226,6 +260,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 
@@ -237,6 +272,7 @@ describe('ContextMenu Component', () => {
     expect(mockOnMove).not.toHaveBeenCalled();
     expect(mockOnDelete).not.toHaveBeenCalled();
     expect(mockOnUndoDelete).not.toHaveBeenCalled();
+    expect(mockOnViewFile).not.toHaveBeenCalled();
   });
 
   test('menu has correct aria-label for accessibility', async () => {
@@ -250,6 +286,7 @@ describe('ContextMenu Component', () => {
         onMove={mockOnMove}
         onClose={mockOnClose}
         isDeleted={false}
+        onViewFile={mockOnViewFile}
       />
     );
 

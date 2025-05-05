@@ -3,7 +3,7 @@
 ## Branch Rules  
 - For each sprint, make a new branch and push all code to that
 - At the end of the sprint, merge with `dev` branch  
-- Never push directly to `main`  
+- Never push directly to `main` unless triggering deployment to Azure
 - Tests must pass before merging  
 
 ## Setup Commands  
@@ -15,12 +15,13 @@
 
 ## Testing Rules  
 - All tests go in `src/tests/`  
-- Always run `npm test` locally first  
+- Always run `npm test` locally first
+- Run  `start coverage\lcov-report\index.html` to view a coverage report for the tests
 - Absolutely no `div` elements allowed  
 - Fix all test failures before pushing  
 
 ## Team Rules  
-- Discuss uncertainties in group chat first  
+- Discuss uncertainties in the group chat first  
 - Verify tests pass before any push to `dev`  
 
 ## Backend Rules

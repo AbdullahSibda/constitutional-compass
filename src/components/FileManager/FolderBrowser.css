@@ -17,10 +17,9 @@
 .breadcrumbs {
   display: flex;
   align-items: center;
-  flex-wrap:wrap;
+  flex-wrap: wrap;
   gap: 0;
   margin-bottom: 1.5rem;
-  
 }
 
 .breadcrumb-wrapper {
@@ -62,7 +61,7 @@
 /* Aligned action buttons */
 .browser-actions {
   display: flex;
-  align-items:end;
+  align-items: end;
   gap: var(--base-spacing);
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
@@ -261,7 +260,7 @@ button, input, [role="button"] {
 .context-menu {
   position: absolute;
   background: var(--dark-bg);
-  border: 1px solid var(--teal-accent);
+  border: 1px solid var(--teal-accent LTSI);
   border-radius: var(--border-radius);
   z-index: 100;
   min-width: 150px;
@@ -540,9 +539,7 @@ button, input, [role="button"] {
   font-size: 0.9em;
 }
 
-/* Add to FolderBrowser.css */
-/* Search & Filter Containers */
-.search-container, 
+/* Filter Containers */
 .filter-input-container {
   display: flex;
   gap: 0.75rem;
@@ -551,7 +548,6 @@ button, input, [role="button"] {
 }
 
 /* Input Fields */
-.search-container input, 
 .filter-input-container input {
   flex: 1;
   padding: 0.65rem 1rem;
@@ -563,7 +559,6 @@ button, input, [role="button"] {
   transition: all 0.2s ease;
 }
 
-.search-container input:focus,
 .filter-input-container input:focus {
   outline: none;
   border-color: var(--teal-accent);
@@ -602,37 +597,33 @@ button, input, [role="button"] {
   background-color: rgba(69, 162, 158, 0.1);
 }
 
-/* Active State */
-.active-search-button {
-  background-color: var(--teal-accent);
-  color: white;
-  font-weight: 500;
+.validation-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-/* File Location */
-.file-location {
-  font-size: 0.85em;
-  color: var(--teal-accent);
-  margin-left: 0.5rem;
-  font-style: italic;
-  opacity: 0.9;
+/* Filter Criteria Dropdown */
+.filter-input-container select {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--mid-dark);
+  background-color: rgba(31, 40, 51, 0.5);
+  color: var(--light-grey);
+  font-size: 0.95rem;
+  font-family: var(--body-font);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-/* Empty State */
-.no-search-results {
-  text-align: center;
-  padding: 2.5rem;
+.filter-input-container select:focus {
+  outline: none;
+  border-color: var(--teal-accent);
+  box-shadow: 0 0 0 2px rgba(69, 162, 158, 0.2);
+}
+
+.filter-input-container select option {
+  background-color: var(--dark-bg);
   color: var(--light-grey);
 }
-
-.no-search-results .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1.25rem;
-  opacity: 0.7;
-}
-
-.no-search-results .empty-text {
-  font-size: 1.25rem;
-  font-weight: 500;
-}
-

@@ -305,7 +305,7 @@ describe('Sidebar', () => {
       select: jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
-            data: { admin_application_reason: null, role: 'pending' },
+            data: { admin_application_reason: 'pending', role: 'pending' },
             error: null,
           }),
         }),

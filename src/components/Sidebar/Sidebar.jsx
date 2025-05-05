@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             setApplicationStatus('Accepted');
           } else if (data?.admin_application_reason?.toLowerCase().includes('rejected')) {
             setApplicationStatus('Rejected');
-          } else if (data?.role === 'pending') {
+          } else if (data?.admin_application_reason?.toLowerCase().includes('pending')) {
             setApplicationStatus('Pending');
           }
         } catch (error) {
