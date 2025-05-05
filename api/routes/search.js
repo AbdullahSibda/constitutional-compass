@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
       }
     );
 
-    // chunks = chunks.filter((c) => c.similarity_score < 0.5);
+    chunks = chunks.filter((c) => c.similarity_score < -0.3);
 
     if (chunkError) throw chunkError;
     if (!chunks || chunks.length === 0)

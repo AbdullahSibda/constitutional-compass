@@ -119,7 +119,7 @@ const Home = () => {
       const exactMatchQuery = formatQueryForExactMatch(searchQuery);
       
       const response = await fetch(
-        `http://localhost:4000/api/search?q=${encodeURIComponent(exactMatchQuery)}`
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent(exactMatchQuery)}`
       );
   
       if (!response.ok) {
@@ -247,7 +247,7 @@ const Home = () => {
           </aside>
         )}
 
-          {results.length > 0 && (
+        {results.length > 0 ? (
             <>
               {displayQuery !== query && (
                 <p className="corrected-message">
@@ -256,6 +256,13 @@ const Home = () => {
               )}
               <SearchResults results={results} query={displayQuery} />
             </>
+          ) : (
+            !isSearching && 
+            !suggestion && 
+            displayQuery && 
+            !error && (
+              <p className="no-results-message">No results match your search</p>
+            )
           )}
         </section>
 
