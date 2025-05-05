@@ -1,10 +1,4 @@
 {
-  "routes": [
-    {
-      "route": "/api/*",
-      "rewrite": "https://my-express-api-ejegemgbftb4a8fw.southafricanorth-01.azurewebsites.net/api/*"
-    }
-  ],
     "navigationFallback": {
       "rewrite": "/index.html",
       "exclude": ["/assets/*", "/*.css", "/*.js"]
