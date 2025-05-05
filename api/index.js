@@ -6,7 +6,7 @@ import searchRouter from "./routes/search.js";
 const app = express();
 // Enable CORS with specific options
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "https://wonderful-river-0d8fbf010.6.azurestaticapps.net"],
   methods: ["POST", "OPTIONS"], // Add OPTIONS here
   allowedHeaders: ["Content-Type", "Authorization"],
   //   credentials: true,
@@ -15,7 +15,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Handle preflight requests for all routes
-// app.options("*", cors(corsOptions)); // This is crucial
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
