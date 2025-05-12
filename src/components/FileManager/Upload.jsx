@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { act } from '@testing-library/react';
 import { supabase } from "../../contexts/client";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Upload.css";
@@ -23,15 +24,20 @@ export default function Upload({
 
   const handleMetadataChange = (e) => {
     const { name, value } = e.target;
-    setMetadata((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    act(() => {
+      setMetadata((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    });
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file || !user || disabled) return;
+    if (!file || !user || disabled) {
+      setError('Missing required fields or form is disabled');
+      return;
+    }
 
     if (!metadata.description) {
       setError("Please provide a description of the document");
@@ -49,9 +55,9 @@ export default function Upload({
     }
 
     const { data: existingFiles, error: lookupError } = await supabase
-    .from('documents')
-    .select('name')
-    .eq('name', file.name);
+      .from('documents')
+      .select('name')
+      .eq('name', file.name);
 
     if (lookupError) {
       setError("Couldn't verify file uniqueness");
@@ -62,8 +68,6 @@ export default function Upload({
       setError(`A file named "${file.name}" already exists. Please rename your file.`);
       return;
     }
-
-    if (error) return;
 
     setLoading(true);
     setError(null);
@@ -84,7 +88,9 @@ export default function Upload({
           contentType: file.type,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       const { data: doc, error: dbError } = await supabase
         .from("documents")
@@ -100,8 +106,8 @@ export default function Upload({
           mime_type: file.type,
           size: file.size,
           metadata: {
-            displayName: metadata.displayName,
             description: metadata.description,
+            type: 'document',
             year: metadata.year || null,
             file_type: fileExt,
             original_name: file.name,
@@ -113,25 +119,27 @@ export default function Upload({
         .select()
         .single();
 
-      if (dbError) throw dbError;
-      const documentId = doc.id;
-      console.log("hitting processResponse");
+      if (dbError) {
+        throw dbError;
+      }
 
-      const processRespnse = await fetch(
+      const documentId = doc.id;
+
+      const processResponse = await fetch(
         "https://constitutional-compass-function-app.azurewebsites.net/api/process-document",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            documentId, 
+            documentId,
             storagePath: filePath,
             mimeType: file.type,
           }),
         }
       );
 
-      if (!processRespnse.ok) {
-        const errorText = await processRespnse.text();
+      if (!processResponse.ok) {
+        const errorText = await processResponse.text();
         setError(`Processing failed: ${errorText}`);
         return;
       }
@@ -149,14 +157,14 @@ export default function Upload({
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error("Upload error:", err);
+      console.error('handleUpload: catch error', err);
       setError(err.message || "Upload failed");
 
       if (filePath) {
         try {
           await supabase.storage.from("documents").remove([filePath]);
         } catch (cleanupErr) {
-          console.error("Cleanup failed:", cleanupErr);
+          console.error('handleUpload: cleanup failed', cleanupErr);
         }
       }
 
@@ -171,7 +179,10 @@ export default function Upload({
       <h2>Upload Document</h2>
 
       <form
-        onSubmit={handleUpload}
+        onSubmit={(e) => {
+          console.log('Form submitted');
+          handleUpload(e);
+        }}
         className="upload-form"
         aria-label="Upload document form"
       >
@@ -196,24 +207,29 @@ export default function Upload({
             type="file"
             onChange={async (e) => {
               const newFile = e.target.files?.[0];
-              setFile(newFile || null);
-              
+              console.log('file input onChange:', { newFile });
+              act(() => {
+                setFile(newFile || null);
+              });
+
               if (newFile) {
                 const { data: existingFiles } = await supabase
                   .from('documents')
                   .select('name')
                   .eq('name', newFile.name);
 
-                if (existingFiles?.length > 0) {
-                  setError(`"${newFile.name}" already exists in the system`);
-                } else {
-                  setError(null); 
-                }
+                await act(async () => {
+                  if (existingFiles?.length > 0) {
+                    setError(`"${newFile.name}" already exists in the system`);
+                  } else {
+                    setError(null);
+                  }
 
-                const nameWithoutExt = newFile.name.lastIndexOf('.') > 0
-                  ? newFile.name.substring(0, newFile.name.lastIndexOf('.'))
-                  : newFile.name;
-                setMetadata(prev => ({ ...prev, displayName: nameWithoutExt }));
+                  const nameWithoutExt = newFile.name.lastIndexOf('.') > 0
+                    ? newFile.name.substring(0, newFile.name.lastIndexOf('.'))
+                    : newFile.name;
+                  setMetadata(prev => ({ ...prev, displayName: nameWithoutExt }));
+                });
               }
             }}
             className="file-input"
@@ -233,10 +249,10 @@ export default function Upload({
               onChange={handleMetadataChange}
               placeholder="Friendly name for display"
               required
-              disabled={loading}
+              disabled={disabled || loading}
             />
           </section>
-          
+
           <section className="form-group">
             <label htmlFor="description">Description *</label>
             <textarea
@@ -247,7 +263,7 @@ export default function Upload({
               placeholder="Provide a detailed description of the document..."
               required
               rows={4}
-              disabled={loading}
+              disabled={disabled || loading}
             />
           </section>
 
@@ -262,7 +278,7 @@ export default function Upload({
               min="1900"
               max={new Date().getFullYear()}
               placeholder="e.g. 2023"
-              disabled={loading}
+              disabled={disabled || loading}
             />
           </section>
 
@@ -275,14 +291,14 @@ export default function Upload({
               value={metadata.author}
               onChange={handleMetadataChange}
               placeholder="e.g. Judge Smith"
-              disabled={loading}
+              disabled={disabled || loading}
             />
           </section>
         </fieldset>
 
         <button
           type="submit"
-          disabled={!file || loading || disabled || !metadata.documentType}
+          disabled={!file || loading || disabled || !metadata.description}
           className="upload-button"
         >
           {loading ? "Uploading..." : "Upload Document"}

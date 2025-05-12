@@ -35,7 +35,7 @@ describe('Edit Component', () => {
     parent_id: 'parent1',
     metadata: {
       displayName: 'Test Document',
-      type: 'constitution_1996',
+      description: 'Sample document description',
       year: '1996',
       author: 'Constitutional Assembly',
     },
@@ -77,8 +77,7 @@ describe('Edit Component', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Edit Metadata/i })).toBeInTheDocument();
       expect(screen.getByDisplayValue('Test Document')).toBeInTheDocument();
-      expect(screen.getByRole('combobox', { name: /Document Category/i })).toHaveValue('constitutional');
-      expect(screen.getByRole('combobox', { name: /Document Type/i })).toHaveValue('constitution_1996');
+      expect(screen.getByDisplayValue('Sample document description')).toBeInTheDocument();
       expect(screen.getByDisplayValue('1996')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Constitutional Assembly')).toBeInTheDocument();
     });
@@ -116,24 +115,6 @@ describe('Edit Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Display name is required', { selector: '#displayName-error' })).toBeInTheDocument();
-      expect(supabase.from().update).not.toHaveBeenCalled();
-    });
-  });
-
-  test('displays validation error for missing document type', async () => {
-    const user = userEvent.setup();
-    render(<Edit item={documentItem} onEditSuccess={mockOnEditSuccess} onCancel={mockOnCancel} />);
-    await waitFor(() => {
-      expect(screen.getByLabelText('Document Type *')).toBeInTheDocument();
-    });
-
-    const documentTypeSelect = screen.getByLabelText('Document Type *');
-
-    await user.selectOptions(documentTypeSelect, '');
-    await user.click(screen.getByRole('button', { name: /Save Changes/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Document type is required', { selector: '#documentType-error' })).toBeInTheDocument();
       expect(supabase.from().update).not.toHaveBeenCalled();
     });
   });
@@ -237,25 +218,6 @@ describe('Edit Component', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('updates document type options based on category selection', async () => {
-    const user = userEvent.setup();
-    render(<Edit item={documentItem} onEditSuccess={mockOnEditSuccess} onCancel={mockOnCancel} />);
-    await waitFor(() => {
-      expect(screen.getByLabelText('Document Category *')).toBeInTheDocument();
-    });
-
-    const categorySelect = screen.getByLabelText('Document Category *');
-
-    await user.selectOptions(categorySelect, 'judicial');
-
-    const documentTypeSelect = screen.getByLabelText('Document Type *');
-    await waitFor(() => {
-      expect(documentTypeSelect).toHaveTextContent('Constitutional Court Ruling');
-      expect(documentTypeSelect).toHaveTextContent('Supreme Court of Appeal Decision');
-      expect(documentTypeSelect).not.toHaveTextContent('Constitution of South Africa (1996)');
-    });
-  });
-
   test('triggers onCancel when Escape key is pressed', async () => {
     const user = userEvent.setup();
     render(<Edit item={folderItem} onEditSuccess={mockOnEditSuccess} onCancel={mockOnCancel} />);
@@ -351,9 +313,12 @@ describe('Edit Component', () => {
     });
 
     const displayNameInput = screen.getByLabelText('Display Name *');
+    const descriptionInput = screen.getByLabelText('Description *');
 
     await user.clear(displayNameInput);
     await user.type(displayNameInput, 'Updated Document');
+    await user.clear(descriptionInput);
+    await user.type(descriptionInput, 'Updated document description');
     await user.click(screen.getByRole('button', { name: /Save Changes/i }));
 
     await waitFor(() => {
