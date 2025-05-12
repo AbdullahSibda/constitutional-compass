@@ -13,68 +13,13 @@ export default function Upload({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const { user } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState("");
-
-  const documentOptions = {
-    constitutional: [
-      { value: "constitution_1996", label: "Constitution of South Africa (1996)" },
-      { value: "interim_constitution", label: "Interim Constitution (1993)" },
-      { value: "constitutional_amendment", label: "Constitutional Amendment" },
-      { value: "bill_of_rights", label: "Bill of Rights" },
-      { value: "founding_principles", label: "Founding Principles Document" },
-    ],
-    legislation: [
-      { value: "act_of_parliament", label: "Act of Parliament" },
-      { value: "regulation", label: "Government Regulation" },
-      { value: "bylaw", label: "Municipal By-law" },
-      { value: "white_paper", label: "White Paper" },
-      { value: "green_paper", label: "Green Paper" },
-      { value: "policy_document", label: "Policy Document" },
-    ],
-    judicial: [
-      { value: "constitutional_court", label: "Constitutional Court Ruling" },
-      { value: "supreme_court_appeal", label: "Supreme Court of Appeal Decision" },
-      { value: "high_court", label: "High Court Decision" },
-      { value: "magistrate_ruling", label: "Magistrate Court Ruling" },
-      { value: "legal_opinion", label: "Legal Opinion" },
-    ],
-    human_rights: [
-      { value: "south_african_hr_commission", label: "SA Human Rights Commission Report" },
-      { value: "udhr", label: "Universal Declaration of Human Rights" },
-      { value: "african_charter", label: "African Charter on Human and Peoples' Rights" },
-      { value: "iccpr", label: "ICCPR Document" },
-      { value: "icescr", label: "ICESCR Document" },
-      { value: "cedaw", label: "CEDAW Document" },
-      { value: "crc", label: "Convention on the Rights of the Child" },
-    ],
-    historical: [
-      { value: "freedom_charter", label: "Freedom Charter (1955)" },
-      { value: "rivieraconference", label: "Rivonia Trial Documents" },
-      { value: "codesa_documents", label: "CODESA Negotiation Records" },
-      { value: "truth_reconciliation", label: "Truth & Reconciliation Commission Report" },
-      { value: "apartheid_law", label: "Historical Apartheid-Era Law" },
-    ],
-    administrative: [
-      { value: "gazette_notice", label: "Government Gazette Notice" },
-      { value: "ministerial_directive", label: "Ministerial Directive" },
-      { value: "circular", label: "Departmental Circular" },
-      { value: "tender_notice", label: "Tender or Procurement Document" },
-      {value: "presidential_proclamation",label: "Presidential Proclamation" },
-      { value: "executive_order", label: "Executive Instruction/Order" },
-    ],
-  };
 
   const [metadata, setMetadata] = useState({
     displayName: "",
-    documentType: "",
+    description: "",
     year: "",
     author: "",
   });
-
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
-    setMetadata((prev) => ({ ...prev, documentType: "" })); // Reset document type
-  };
 
   const handleMetadataChange = (e) => {
     const { name, value } = e.target;
@@ -88,8 +33,8 @@ export default function Upload({
     e.preventDefault();
     if (!file || !user || disabled) return;
 
-    if (!metadata.documentType) {
-      setError("Please specify the document type");
+    if (!metadata.description) {
+      setError("Please provide a description of the document");
       return;
     }
 
@@ -156,7 +101,7 @@ export default function Upload({
           size: file.size,
           metadata: {
             displayName: metadata.displayName,
-            type: metadata.documentType,
+            description: metadata.description,
             year: metadata.year || null,
             file_type: fileExt,
             original_name: file.name,
@@ -178,9 +123,9 @@ export default function Upload({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            documentId, // from your supabase insert
+            documentId, 
             storagePath: filePath,
-            mimeType: file.type, // so the backend knows how to extract text
+            mimeType: file.type,
           }),
         }
       );
@@ -195,7 +140,7 @@ export default function Upload({
       setFile(null);
       setMetadata({
         displayName: "",
-        documentType: "",
+        description: "",
         year: "",
         author: "",
       });
@@ -254,7 +199,6 @@ export default function Upload({
               setFile(newFile || null);
               
               if (newFile) {
-                // Check for duplicates
                 const { data: existingFiles } = await supabase
                   .from('documents')
                   .select('name')
@@ -263,10 +207,9 @@ export default function Upload({
                 if (existingFiles?.length > 0) {
                   setError(`"${newFile.name}" already exists in the system`);
                 } else {
-                  setError(null); // Clear error if no duplicate found
+                  setError(null); 
                 }
 
-                // Always set display name (don't clear it for duplicates)
                 const nameWithoutExt = newFile.name.lastIndexOf('.') > 0
                   ? newFile.name.substring(0, newFile.name.lastIndexOf('.'))
                   : newFile.name;
@@ -293,45 +236,19 @@ export default function Upload({
               disabled={loading}
             />
           </section>
+          
           <section className="form-group">
-            <label htmlFor="categorySelect">Document Category *</label>
-            <select
-              id="categorySelect"
-              name="categorySelect"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              required
-              disabled={loading}
-            >
-              <option value="">Select a category...</option>
-              <option value="constitutional">
-                Constitutional & Foundational
-              </option>
-              <option value="legislation">Legislation & Policy</option>
-              <option value="judicial">Judicial Decisions</option>
-              <option value="human_rights">Human Rights & International</option>
-              <option value="historical">
-                Historical & Liberation Documents
-              </option>
-              <option value="administrative">Government Notices & Admin</option>
-            </select>
-
-            <label htmlFor="documentType">Document Type *</label>
-            <select
-              id="documentType"
-              name="documentType"
-              value={metadata.documentType}
+            <label htmlFor="description">Description *</label>
+            <textarea
+              id="description"
+              name="description"
+              value={metadata.description}
               onChange={handleMetadataChange}
+              placeholder="Provide a detailed description of the document..."
               required
-              disabled={loading || !selectedCategory}
-            >
-              <option value="">Select document type...</option>
-              {documentOptions[selectedCategory]?.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              rows={4}
+              disabled={loading}
+            />
           </section>
 
           <section className="form-group">
