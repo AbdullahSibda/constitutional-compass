@@ -92,14 +92,14 @@ const handlePermanentDelete = async () => {
         {isDeleted ? (
           <li>
             <button className="context-menu-item delete" onClick={handleUndoDelete}>
-              Undo Delete
+              Undo <Soft></Soft> Delete
             </button>
           </li>
         ) : (
           <>
             <li>
               <button className="context-menu-item delete" onClick={handleSoftDelete}>
-                Delete
+                Soft Delete
               </button>
             </li>
             {isMod && (
