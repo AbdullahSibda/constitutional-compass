@@ -18,6 +18,32 @@ export async function deleteItem(item) {
   }
 }
 
+
+export async function permanentlyDeleteItem(item) {
+  try {
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', item.id);
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    throw new Error('Failed to permanently delete item: ' + err.message);
+  }
+}
+
+export async function canReadDocument(item) {
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('id', item.id);
+
+  if (error) throw error;
+  return data; 
+}
+
+
 export async function restoreItem(item) {
   try {
     const { error } = await supabase
