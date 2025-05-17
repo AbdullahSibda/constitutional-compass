@@ -2,6 +2,17 @@ import React, { useState } from "react";
 import "./SearchResults.css";
 import { highlightText } from "../utils/highlightText";
 
+const textToSpeech = (text) => {
+  if (!window.speechSynthesis) {
+    alert("Your browser does not support text-to-speech.");
+    return;
+  }
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-US";
+  window.speechSynthesis.speak(speech);
+};
+
 const download = (result) => {
   let content = `FROM: ${result.title} \n\n`;
 
@@ -26,7 +37,6 @@ const SearchResults = ({ results, query }) => {
   const [yearRange, setYearRange] = useState({ min: "", max: "" });
   const [groupByFileType, setGroupByFileType] = useState(false);
 
-  const allYears = [...new Set(results.map((r) => r.metadata?.year))].filter(Boolean).sort((a, b) => a - b);
   const allFileTypes = [...new Set(results.map((r) => r.metadata?.file_type))].filter(Boolean);
 
   const filteredResults = results.filter((result) => {
@@ -61,7 +71,18 @@ const SearchResults = ({ results, query }) => {
       {snippets.map((snippet, idx) => (
         <blockquote key={idx} className="snippet">
           <p className="snippet-text">{highlightText(snippet.text, query)}</p>
-          <footer className="similarity-score">{Math.round(100 -(1 + snippet.score) * 100)}% match</footer>
+          <footer className="snippet-footer">
+            <span className="similarity-score">
+              {Math.round(100 - (1 + snippet.score) * 100)}% match
+            </span>
+            <button
+              className="speak-button"
+              onClick={() => textToSpeech(snippet.text)}
+              title="Read this snippet aloud"
+            >
+              🔊 Speak
+            </button>
+          </footer>
         </blockquote>
       ))}
     </section>
@@ -106,17 +127,21 @@ const SearchResults = ({ results, query }) => {
           <section className="filter-group">
             <label>Filter by Year Range:</label>
             <section className="year-range-group">
-              <select value={yearRange.min} onChange={(e) => handleYearRangeChange(e, "min")}>\n                <option value="">From year</option>
-                {allYears.map((year) => (
-                  <option key={`min-${year}`} value={year}>{year}</option>
-                ))}
-              </select>
+              <input
+                type="number"
+                placeholder="Start year"
+                value={yearRange.min}
+                onChange={(e) => handleYearRangeChange(e, "min")}
+                className="year-input"
+              />
               <strong>to</strong>
-              <select value={yearRange.max} onChange={(e) => handleYearRangeChange(e, "max")}>\n                <option value="">To year</option>
-                {allYears.map((year) => (
-                  <option key={`max-${year}`} value={year}>{year}</option>
-                ))}
-              </select>
+              <input
+                type="number"
+                placeholder="End year"
+                value={yearRange.max}
+                onChange={(e) => handleYearRangeChange(e, "max")}
+                className="year-input"
+              />
             </section>
           </section>
 

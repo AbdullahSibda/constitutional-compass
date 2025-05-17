@@ -33,146 +33,143 @@ export default function Upload({
   };
 
   const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file || !user || disabled) {
-      setError('Missing required fields or form is disabled');
-      return;
-    }
+  e.preventDefault();
+  if (!file || !user || disabled) {
+    setError('Missing required fields or form is disabled');
+    return;
+  }
 
-    if (!metadata.description) {
-      setError("Please provide a description of the document");
-      return;
-    }
+  if (!metadata.description) {
+    setError("Please provide a description of the document");
+    return;
+  }
 
-    if (file.size > 50 * 1024 * 1024) {
-      setError("File size exceeds 50MB limit");
-      return;
-    }
+  if (file.size > 50 * 1024 * 1024) {
+    setError("File size exceeds 50MB limit");
+    return;
+  }
 
-    if (metadata.year && parseInt(metadata.year) > new Date().getFullYear()) {
-      setError("Year cannot be in the future");
-      return;
-    }
+  if (metadata.year && parseInt(metadata.year) > new Date().getFullYear()) {
+    setError("Year cannot be in the future");
+    return;
+  }
 
-    const { data: existingFiles, error: lookupError } = await supabase
-      .from('documents')
-      .select('name')
-      .eq('name', file.name);
+  const { data: existingFiles, error: lookupError } = await supabase
+    .from('documents')
+    .select('name')
+    .eq('name', file.name);
 
-    if (lookupError) {
-      setError("Couldn't verify file uniqueness");
-      return;
-    }
+  if (lookupError) {
+    setError("Couldn't verify file uniqueness");
+    return;
+  }
 
-    if (existingFiles && existingFiles.length > 0) {
-      setError(`A file named "${file.name}" already exists. Please rename your file.`);
-      return;
-    }
+  if (existingFiles && existingFiles.length > 0) {
+    setError(`A file named "${file.name}" already exists. Please rename your file.`);
+    return;
+  }
 
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+  setLoading(true);
+  setError(null);
+  setSuccess(false);
 
-    let filePath = "";
+  let filePath = "";
 
-    try {
-      const fileExt = file.name.split(".").pop().toLowerCase();
-      const fileName = `${user.id.slice(0, 8)}-${Date.now()}.${fileExt}`;
-      filePath = `${user.id}/${parentId}/${fileName}`;
+  try {
+    const fileExt = file.name.split(".").pop().toLowerCase();
+    const fileName = `${user.id.slice(0, 8)}-${Date.now()}.${fileExt}`;
+    filePath = `${user.id}/${parentId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("documents")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: doc, error: dbError } = await supabase
-        .from("documents")
-        .insert({
-          name: file.name,
-          parent_id:
-            parentId === "00000000-0000-0000-0000-000000000000"
-              ? null
-              : parentId,
-          path: "",
-          is_folder: false,
-          storage_path: filePath,
-          mime_type: file.type,
-          size: file.size,
-          metadata: {
-            description: metadata.description,
-            type: 'document',
-            year: metadata.year || null,
-            file_type: fileExt,
-            original_name: file.name,
-            author: metadata.author || null,
-            uploaded_by: user.email,
-          },
-          created_by: user.id,
-        })
-        .select()
-        .single();
-
-      if (dbError) {
-        throw dbError;
-      }
-
-      const documentId = doc.id;
-
-      const processResponse = await fetch(
-        "https://constitutional-compass-function-app.azurewebsites.net/api/process-document",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            documentId,
-            storagePath: filePath,
-            mimeType: file.type,
-          }),
-        }
-      );
-
-      if (!processResponse.ok) {
-        const errorText = await processResponse.text();
-        setError(`Processing failed: ${errorText}`);
-        return;
-      }
-
-      setSuccess(true);
-      setFile(null);
-      setMetadata({
-        displayName: "",
-        description: "",
-        year: "",
-        author: "",
+    const { error: uploadError } = await supabase.storage
+      .from("documents")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
       });
 
-      if (onUploadSuccess) await onUploadSuccess();
-
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      console.error('handleUpload: catch error', err);
-      setError(err.message || "Upload failed");
-
-      if (filePath) {
-        try {
-          await supabase.storage.from("documents").remove([filePath]);
-        } catch (cleanupErr) {
-          console.error('handleUpload: cleanup failed', cleanupErr);
-        }
-      }
-
-      setTimeout(() => setError(null), 5000);
-    } finally {
-      setLoading(false);
+    if (uploadError) {
+      throw uploadError;
     }
-  };
+
+    const { data: doc, error: dbError } = await supabase
+      .from("documents")
+      .insert({
+        name: file.name,
+        parent_id: parentId === "00000000-0000-0000-0000-000000000000" ? null : parentId,
+        path: "",
+        is_folder: false,
+        storage_path: filePath,
+        mime_type: file.type,
+        size: file.size,
+        metadata: {
+          description: metadata.description,
+          type: 'document',
+          year: metadata.year || null,
+          file_type: fileExt,
+          original_name: file.name,
+          author: metadata.author || null,
+          uploaded_by: user.email,
+        },
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      throw dbError;
+    }
+
+    const documentId = doc.id;
+
+    const processResponse = await fetch(
+      "https://constitutional-compass-function-app.azurewebsites.net/api/process-document",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId,
+          storagePath: filePath,
+          mimeType: file.type,
+        }),
+      }
+    );
+
+    if (!processResponse.ok) {
+      const errorText = await processResponse.text();
+      setError(`Processing failed: ${errorText}`);
+      return;
+    }
+
+    setSuccess(true);
+    setFile(null);
+    setMetadata({
+      displayName: "",
+      description: "",
+      year: "",
+      author: "",
+    });
+
+    if (onUploadSuccess) await onUploadSuccess();
+
+    setTimeout(() => setSuccess(false), 3000);
+  } catch (err) {
+    console.error('handleUpload: catch error', err);
+    setError(err.message || "Upload failed");
+
+    if (filePath) {
+      try {
+        await supabase.storage.from("documents").remove([filePath]);
+      } catch (cleanupErr) {
+        console.error('handleUpload: cleanup failed', cleanupErr);
+      }
+    }
+
+    setTimeout(() => setError(null), 5000);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <section className="upload-container">
