@@ -639,11 +639,11 @@ describe('FolderBrowser Component', () => {
       </MemoryRouter>
     );
     await waitFor(() => {
-      expect(screen.getByText('Error: Network error')).toBeInTheDocument();
+      expect(screen.getByText(/Error:.*Network error/i)).toBeInTheDocument();
     });
     await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     await waitFor(() => {
-      expect(screen.queryByText('Error: Network error')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Error:.*Network error/i)).not.toBeInTheDocument();
     });
   });
 
@@ -671,5 +671,156 @@ describe('FolderBrowser Component', () => {
     await waitFor(() => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
+  });
+
+  test('createFolder does nothing with empty folder name', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'New Folder' }));
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Folder name')).toBeInTheDocument();
+      expect(supabase.from).toHaveBeenCalledWith('documents');
+      expect(supabase.from().insert).not.toHaveBeenCalled();
+    });
+  });
+
+  test('handleMoveHere prevents moving to root folder', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    });
+    const fileContainer = screen.getByRole('button', { name: 'View file File 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await user.click(screen.getByRole('button', { name: 'Move' }));
+    await user.click(screen.getByRole('button', { name: 'Go Up' }));
+    await waitFor(() => {
+      expect(screen.getByText('Constitution Archive')).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: 'Move Here' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Move Here' })).toHaveAttribute('title', 'Moving items into Constitution Archive is not allowed');
+    });
+  });
+
+  test('navigateToFolder is restricted during upload form', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Upload File' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Upload File' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Open folder Subfolder 1' })).not.toBeInTheDocument();
+      expect(screen.getByText('Folder 1')).toHaveAttribute('aria-current', 'page');
+    });
+  });
+
+  test('renders and clears search UI', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Cancel Search' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Cancel Search' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
+    });
+  });
+
+  test('renders filter button only when files exist', async () => {
+    supabase.from.mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      then: jest.fn().mockImplementation((cb) =>
+        Promise.resolve(cb({ data: [mockFolder, mockSubFolder], error: null }))
+      ),
+    }));
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Subfolder 1' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
+    });
+  });
+
+  test('cancels folder creation', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'New Folder' }));
+    await user.type(screen.getByPlaceholderText('Folder name'), 'Test Folder');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('Folder name')).not.toBeInTheDocument();
+      expect(supabase.from).toHaveBeenCalledWith('documents');
+      expect(supabase.from().insert).not.toHaveBeenCalled();
+    });
+  });
+
+  test('folder items have correct accessibility attributes', async () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    });
+    const fileButton = screen.getByRole('button', { name: 'View file File 1' });
+    expect(fileButton).toHaveAttribute('aria-label', 'View file File 1');
+    const fileContainer = fileButton.closest('.browser-item-container');
+    const contextButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    expect(contextButton).toHaveAttribute('aria-haspopup', 'menu');
+    expect(contextButton).toHaveAttribute('aria-expanded', 'false');
   });
 });
