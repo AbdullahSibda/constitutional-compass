@@ -95,7 +95,7 @@ export default function Search({
         disabled={loading}
         aria-label="Search files"
       />
-      <button type="submit" disabled={loading}>
+      <button type="submit" disabled={loading} aria-busy={loading}>
         {loading ? 'Searching...' : 'Search'}
       </button>
       <button
