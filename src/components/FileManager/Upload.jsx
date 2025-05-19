@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { act } from '@testing-library/react';
 import { supabase } from "../../contexts/client";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Upload.css";
@@ -24,12 +23,10 @@ export default function Upload({
 
   const handleMetadataChange = (e) => {
     const { name, value } = e.target;
-    act(() => {
       setMetadata((prev) => ({
         ...prev,
         [name]: value,
-      }));
-    });
+    }));
   };
 
   const handleUpload = async (e) => {
@@ -205,17 +202,14 @@ export default function Upload({
             onChange={async (e) => {
               const newFile = e.target.files?.[0];
               console.log('file input onChange:', { newFile });
-              act(() => {
-                setFile(newFile || null);
-              });
-
+              setFile(newFile || null);
+              
               if (newFile) {
                 const { data: existingFiles } = await supabase
                   .from('documents')
                   .select('name')
                   .eq('name', newFile.name);
 
-                await act(async () => {
                   if (existingFiles?.length > 0) {
                     setError(`"${newFile.name}" already exists in the system`);
                   } else {
@@ -226,7 +220,6 @@ export default function Upload({
                     ? newFile.name.substring(0, newFile.name.lastIndexOf('.'))
                     : newFile.name;
                   setMetadata(prev => ({ ...prev, displayName: nameWithoutExt }));
-                });
               }
             }}
             className="file-input"
