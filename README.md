@@ -17,7 +17,6 @@
 - All tests go in `src/tests/`  
 - Always run `npm test` locally first
 - Run  `start coverage\lcov-report\index.html` to view a coverage report for the tests
-- Absolutely no `div` elements allowed  
 - Fix all test failures before pushing  
 
 ## Team Rules  
@@ -25,5 +24,4 @@
 - Verify tests pass before any push to `dev`  
 
 ## Backend Rules
-- Add all backend code to the api folder so that Azure can detect it
-- Tests for backend can go into the tests folder
+- Add all backend code to the api repo - constitutional-compass-api

@@ -1,4 +1,3 @@
-/* Upload.css */
 .upload-container {
   padding: 1.5rem;
   border-radius: 0.5rem;
@@ -88,31 +87,6 @@ legend {
   border-radius: 0.25rem;
 }
 
-.progress-container {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0;
-}
-
-progress {
-  flex-grow: 1;
-  height: 0.5rem;
-  border-radius: 0.25rem;
-  background-color: var(--dark-bg);
-}
-
-progress::-webkit-progress-bar {
-  background-color: var(--dark-bg);
-  border-radius: 0.25rem;
-}
-
-progress::-webkit-progress-value {
-  background-color: var(--teal-accent);
-  border-radius: 0.25rem;
-}
-
 .upload-button {
   padding: 0.75rem 1.5rem;
   background-color: var(--teal-accent);
@@ -186,6 +160,7 @@ output.success-message {
 }
 
 .form-group input,
+.form-group textarea,
 .form-group select {
   padding: 0.75rem;
   border: 0.0625rem solid var(--light-grey);
@@ -194,6 +169,12 @@ output.success-message {
   background-color: var(--dark-bg);
   color: var(--white);
   font-family: var(--body-font);
+}
+
+.form-group textarea {
+  min-height: 2rem;
+  resize: vertical;
+  line-height: 1.5;
 }
 
 .form-group input:-webkit-autofill,
@@ -205,6 +186,7 @@ output.success-message {
 }
 
 .form-group input:focus,
+.form-group textarea:focus,
 .form-group select:focus {
   outline: none;
   border-color: var(--teal-accent);
@@ -212,6 +194,7 @@ output.success-message {
 }
 
 .form-group input:disabled,
+.form-group textarea:disabled,
 .form-group select:disabled {
   background-color: var(--mid-dark);
   opacity: 0.7;

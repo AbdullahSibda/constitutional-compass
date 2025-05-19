@@ -11,7 +11,8 @@ export default function Search({
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  const handleSearch = async (e) => {
+    e.preventDefault(); // Prevent form submission reload
     if (!searchQuery.trim()) {
       onClearSearch();
       return;
@@ -31,7 +32,7 @@ export default function Search({
         .eq('is_folder', false)
         .or(
           `metadata->>displayName.ilike.%${searchQuery}%,` +
-          `metadata->>type.ilike.%${searchQuery}%,` +
+          `metadata->>description.ilike.%${searchQuery}%,` +
           `metadata->>file_type.ilike.%${searchQuery}%,` +
           `metadata->>year.ilike.%${searchQuery}%`
         )
@@ -85,18 +86,20 @@ export default function Search({
   };
 
   return (
-    <search className="search-container">
+    <form className="search-container" role="search" onSubmit={handleSearch}>
       <input
-        type="text"
+        type="search"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Search files in this folder..."
         disabled={loading}
+        aria-label="Search files"
       />
-      <button onClick={handleSearch} disabled={loading}>
+      <button type="submit" disabled={loading}>
         {loading ? 'Searching...' : 'Search'}
       </button>
       <button
+        type="button"
         onClick={() => {
           setSearchQuery('');
           onClearSearch();
@@ -105,6 +108,6 @@ export default function Search({
       >
         Clear
       </button>
-    </search>
+    </form>
   );
 }

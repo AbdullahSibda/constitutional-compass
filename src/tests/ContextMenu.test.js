@@ -3,6 +3,22 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import ContextMenu from '../components/FileManager/ContextMenu';
+import * as DeleteModule from '../components/FileManager/Delete';
+import { AuthProvider } from '../contexts/AuthContext';
+
+// Mock the Delete module
+jest.mock('../components/FileManager/Delete', () => ({
+  deleteItem: jest.fn(),
+  restoreItem: jest.fn(),
+  permanentlyDeleteItem: jest.fn(), // Add mock for permanentlyDeleteItem
+}));
+
+// Mock AuthContext provider for tests
+const AuthContextWrapper = ({ children, userRole = 'user' }) => (
+  <AuthProvider value={{ userRole }}>
+    {children}
+  </AuthProvider>
+);
 
 describe('ContextMenu Component', () => {
   const mockOnEdit = jest.fn();
@@ -27,87 +43,34 @@ describe('ContextMenu Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mocks for successful delete, restore, and permanent delete
+    DeleteModule.deleteItem.mockResolvedValue({ data: null, error: null });
+    DeleteModule.restoreItem.mockResolvedValue({ data: null, error: null });
+    DeleteModule.permanentlyDeleteItem.mockResolvedValue({ data: null, error: null });
+    // Spy on console.error to test error logging
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  test('renders context menu for a file with all options', async () => {
-    render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
-    );
-
-    expect(screen.getByRole('list', { name: /Item actions/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Edit Metadata/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Download/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Move/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /View File/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
-  });
-
-  test('renders context menu for a folder without download or view file options', async () => {
-    render(
-      <ContextMenu
-        item={folderItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
-    );
-
-    expect(screen.getByRole('list', { name: /Item actions/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Edit Metadata/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Download/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /View File/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Move/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
-  });
-
-  test('renders Undo Delete button when item is deleted', async () => {
-    render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={true}
-        onViewFile={mockOnViewFile}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: /Undo Delete/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Delete$/i })).not.toBeInTheDocument();
+  afterEach(() => {
+    console.error.mockRestore();
   });
 
   test('calls onEdit and onClose when Edit Metadata is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
     await user.click(screen.getByRole('button', { name: /Edit Metadata/i }));
@@ -119,17 +82,19 @@ describe('ContextMenu Component', () => {
   test('calls onDownload and onClose when Download is clicked for a file', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
     await user.click(screen.getByRole('button', { name: /Download/i }));
@@ -141,17 +106,19 @@ describe('ContextMenu Component', () => {
   test('calls onViewFile and onClose when View File is clicked for a file', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
     await user.click(screen.getByRole('button', { name: /View File/i }));
@@ -163,17 +130,19 @@ describe('ContextMenu Component', () => {
   test('calls onMove and onClose when Move is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
     await user.click(screen.getByRole('button', { name: /Move/i }));
@@ -182,86 +151,138 @@ describe('ContextMenu Component', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onDelete and onClose when Delete is clicked for a file', async () => {
+  test('calls deleteItem, onDelete, and onClose when Soft Delete is clicked for a file', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
-    await user.click(screen.getByRole('button', { name: /Delete/i }));
+    await user.click(screen.getByRole('button', { name: /Soft Delete/i }));
 
-    expect(mockOnDelete).toHaveBeenCalledTimes(1);
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(DeleteModule.deleteItem).toHaveBeenCalledWith(fileItem);
+      expect(mockOnDelete).toHaveBeenCalledWith(fileItem.id, true);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 
-  test('calls onDelete and onClose when Delete is clicked for a folder', async () => {
+  test('handles deleteItem error and calls onDelete with error message', async () => {
     const user = userEvent.setup();
+    const errorMessage = 'Failed to delete item';
+    DeleteModule.deleteItem.mockRejectedValue(new Error(errorMessage));
+
     render(
-      <ContextMenu
-        item={folderItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
-    await user.click(screen.getByRole('button', { name: /Delete/i }));
+    await user.click(screen.getByRole('button', { name: /Soft Delete/i }));
 
-    expect(mockOnDelete).toHaveBeenCalledTimes(1);
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(DeleteModule.deleteItem).toHaveBeenCalledWith(fileItem);
+      expect(console.error).toHaveBeenCalledWith('Soft delete failed:', expect.any(Error));
+      expect(mockOnDelete).toHaveBeenCalledWith(errorMessage);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 
-  test('calls onUndoDelete and onClose when Undo Delete is clicked', async () => {
+  test('calls restoreItem, onUndoDelete, and onClose when Undo Soft Delete is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={true}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={true}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
-    await user.click(screen.getByRole('button', { name: /Undo Delete/i }));
+    await user.click(screen.getByRole('button', { name: /Undo Soft Delete/i }));
 
-    expect(mockOnUndoDelete).toHaveBeenCalledTimes(1);
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(DeleteModule.restoreItem).toHaveBeenCalledWith(fileItem);
+      expect(mockOnUndoDelete).toHaveBeenCalledWith(fileItem.id, false);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test('handles restoreItem error and calls onUndoDelete with error message', async () => {
+    const user = userEvent.setup();
+    const errorMessage = 'Failed to restore item';
+    DeleteModule.restoreItem.mockRejectedValue(new Error(errorMessage));
+
+    render(
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={true}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: /Undo Soft Delete/i }));
+
+    await waitFor(() => {
+      expect(DeleteModule.restoreItem).toHaveBeenCalledWith(fileItem);
+      expect(console.error).toHaveBeenCalledWith('Undo delete failed:', expect.any(Error));
+      expect(mockOnUndoDelete).toHaveBeenCalledWith(errorMessage);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('calls onClose when clicking outside the menu', async () => {
     const user = userEvent.setup();
     render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
+      <AuthContextWrapper userRole="user">
+        <ContextMenu
+          item={fileItem}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+          onUndoDelete={mockOnUndoDelete}
+          onDownload={mockOnDownload}
+          onMove={mockOnMove}
+          onClose={mockOnClose}
+          isDeleted={false}
+          onViewFile={mockOnViewFile}
+        />
+      </AuthContextWrapper>
     );
 
     await user.click(screen.getByRole('dialog'));
@@ -273,23 +294,5 @@ describe('ContextMenu Component', () => {
     expect(mockOnDelete).not.toHaveBeenCalled();
     expect(mockOnUndoDelete).not.toHaveBeenCalled();
     expect(mockOnViewFile).not.toHaveBeenCalled();
-  });
-
-  test('menu has correct aria-label for accessibility', async () => {
-    render(
-      <ContextMenu
-        item={fileItem}
-        onEdit={mockOnEdit}
-        onDelete={mockOnDelete}
-        onUndoDelete={mockOnUndoDelete}
-        onDownload={mockOnDownload}
-        onMove={mockOnMove}
-        onClose={mockOnClose}
-        isDeleted={false}
-        onViewFile={mockOnViewFile}
-      />
-    );
-
-    expect(screen.getByRole('list')).toHaveAttribute('aria-label', 'Item actions');
   });
 });

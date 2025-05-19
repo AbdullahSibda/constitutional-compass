@@ -1,17 +1,49 @@
-import { deleteItem, restoreItem } from './Delete';
+import { useEffect, useState } from 'react';
+import { deleteItem, restoreItem, permanentlyDeleteItem } from './Delete';
+import { useAuth } from '../../contexts/AuthContext';
 
-export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDownload, onMove, onClose, isDeleted, onViewFile }) {
-  const handleDelete = async () => {
+export default function ContextMenu({
+  item,
+  onEdit,
+  onDelete,
+  onUndoDelete,
+  onDownload,
+  onMove,
+  onClose,
+  isDeleted,
+  onViewFile
+}) {
+  const { userRole } = useAuth();
+  const [isMod, setIsMod] = useState(false);
+
+  useEffect(() => {
+    if (userRole?.toLowerCase() === 'moderator') {
+      setIsMod(true);
+    }
+  }, [userRole]);
+
+  const handleSoftDelete = async () => {
     try {
       await deleteItem(item);
       onDelete(item.id, true);
       onClose();
     } catch (err) {
-      console.error('Delete failed:', err);
+      console.error('Soft delete failed:', err);
       onDelete(err.message);
       onClose();
     }
   };
+
+const handlePermanentDelete = async () => {
+  console.log("Permanently deleting item:", item);
+  try {
+    await permanentlyDeleteItem(item);
+    onDelete(item.id, true);
+    onClose();
+  } catch (err) {
+    console.error("Permanent delete failed:", err);
+  }
+};
 
   const handleUndoDelete = async () => {
     try {
@@ -33,6 +65,7 @@ export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDo
             Edit Metadata
           </button>
         </li>
+
         {!item.is_folder && (
           <li>
             <button className="context-menu-item" onClick={() => { onDownload(); onClose(); }}>
@@ -40,11 +73,13 @@ export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDo
             </button>
           </li>
         )}
+
         <li>
           <button className="context-menu-item" onClick={() => { onMove(); onClose(); }}>
             Move
           </button>
         </li>
+
         {!item.is_folder && (
           <li>
             <button className="context-menu-item" onClick={() => { onViewFile(); onClose(); }}>
@@ -52,11 +87,30 @@ export default function ContextMenu({ item, onEdit, onDelete, onUndoDelete, onDo
             </button>
           </li>
         )}
-        <li>
-          <button className="context-menu-item delete" onClick={isDeleted ? handleUndoDelete : handleDelete}>
-            {isDeleted ? 'Undo Delete' : 'Delete'}
-          </button>
-        </li>
+
+        {/* Delete Options */}
+        {isDeleted ? (
+          <li>
+            <button className="context-menu-item delete" onClick={handleUndoDelete}>
+              Undo Soft Delete
+            </button>
+          </li>
+        ) : (
+          <>
+            <li>
+              <button className="context-menu-item delete" onClick={handleSoftDelete}>
+                Soft Delete
+              </button>
+            </li>
+            {isMod && (
+              <li>
+                <button className="context-menu-item delete permanent" onClick={handlePermanentDelete}>
+                  Permanently Delete
+                </button>
+              </li>
+            )}
+          </>
+        )}
       </menu>
     </dialog>
   );
