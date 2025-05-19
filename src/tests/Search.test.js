@@ -55,7 +55,13 @@ beforeEach(() => {
       select: jest.fn().mockImplementation((query) => {
         const chain = { ...mockQueryChain };
         if (query === '*, parentFolder:parent_id (id, name)') {
-          chain.in = jest.fn().mockResolvedValue({ data: mockDocuments, error: null });
+          chain.in = jest.fn().mockImplementation(() => {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve({ data: mockDocuments, error: null });
+              }, 100); // Small delay to test loading state
+              });
+          });
         } else if (query === 'id') {
           chain.eq = jest.fn().mockReturnThis();
           chain.neq = jest.fn().mockReturnThis();
@@ -162,5 +168,4 @@ describe('Search Component', () => {
       expect(mockOnSearchResults).not.toHaveBeenCalled();
     });
   });
-
 });
