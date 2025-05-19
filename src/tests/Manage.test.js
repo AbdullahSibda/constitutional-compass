@@ -49,6 +49,7 @@ describe('Manage Component', () => {
     jest.clearAllMocks();
   });
 
+  // Original tests
   test('renders manage users header and loading state', async () => {
     render(<Manage />);
     
@@ -134,6 +135,22 @@ describe('Manage Component', () => {
       expect(screen.getByText('Manage Users')).toBeInTheDocument();
       expect(screen.getByText('user1@example.com')).toBeInTheDocument();
       expect(supabase.from).toHaveBeenCalled();
+    }, { timeout: 1000 });
+  });
+
+  test('hides sidebar toggle when sidebar is open', async () => {
+    const user = userEvent.setup();
+    render(<Manage />);
+
+    const toggleButton = screen.getByRole('button', { name: /☰/ });
+    expect(toggleButton).toBeVisible();
+
+    await act(async () => {
+      await user.click(toggleButton);
+    });
+
+    await waitFor(() => {
+      expect(toggleButton).not.toBeVisible();
     }, { timeout: 1000 });
   });
 });
