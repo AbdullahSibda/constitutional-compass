@@ -12,13 +12,29 @@ const textToSpeech = (text) => {
   speech.lang = "en-US";
   window.speechSynthesis.speak(speech);
 };
+const formatResultsAsText = (results) => {
+  let output = '';
+  for (const [filename, matches] of Object.entries(results)) {
+    output += `=== ${filename} ===\n\n`;
+    matches.forEach(match => {
+      output += `• "${match.content}"\n  Match: ${match.match}%\n\n`;
+    });
+  }
+  return output;
+};
 
-const download = (result) => {
-  let content = `FROM: ${result.title} \n\n`;
+const download = (results) => {
+  let content = "";
 
-  result.snippets.forEach((snippet) => {
-    const matchPercentage = Math.round((1 - snippet.score) * 100);
-    content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
+  results.forEach((result, index) => {
+    content += `=== ${result.title} ===\n\n`;
+
+    result.snippets.forEach((snippet) => {
+      const matchPercentage = Math.round((1 - snippet.score) * 100);
+      content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
+    });
+
+    content += "\n\n"; 
   });
 
   const blob = new Blob([content], { type: "text/plain" });
@@ -26,11 +42,12 @@ const download = (result) => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${result.title.replace(/\.pdf$/i, "")}_results.txt`;
+  link.download = "all_search_results.pdf";
   link.click();
 
   URL.revokeObjectURL(url);
 };
+
 
 const SearchResults = ({ results, query }) => {
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
@@ -113,7 +130,7 @@ const SearchResults = ({ results, query }) => {
       {renderSnippets(result.snippets)}
 
       <section className="download-button-container">
-        <button className="download-button" onClick={() => download(result)}>
+        <button className="download-button" onClick={() => download(filteredResults)}>
           Download
         </button>
       </section>
