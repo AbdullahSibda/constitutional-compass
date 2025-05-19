@@ -94,6 +94,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </Link>
     </>
   )}
+  {userRole === 'moderator' && (
+    <>
+      <Link to="/Manage" className="nav-link" onClick={() => setIsOpen(false)}>
+        Manage
+      </Link>
+    </>
+  )}
 </nav>
 
       {applicationStatus && (
