@@ -88,6 +88,7 @@ describe('Home Component', () => {
     jest.clearAllMocks();
   });
 
+  // Original tests
   test('renders main content when loading is false and ready is true', async () => {
     render(<BrowserRouter><Home /></BrowserRouter>);
     await waitFor(() => {
@@ -377,5 +378,43 @@ describe('Home Component', () => {
     expect(searchButton).toHaveAttribute('aria-busy', 'false');
     const searchResultsSection = screen.getByRole('region', { name: /search results/i });
     expect(searchResultsSection).toHaveAttribute('aria-live', 'polite');
+  });
+
+  // New tests
+  test('checkIndividualWords detects misspelled words', async () => {
+    mockDictionary.check.mockImplementation((word) => word !== 'teh');
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await userEvent.type(searchInput, 'teh world');
+    await userEvent.click(searchButton);
+    await waitFor(() => {
+      expect(mockDictionary.check).toHaveBeenCalledWith('teh');
+      expect(screen.getByText(/Possible spelling errors in:/)).toBeInTheDocument();
+      expect(screen.getByText('teh')).toBeInTheDocument();
+    });
+  });
+  
+  test('performSearch displays results', async () => {
+    fetch.mockReset();
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ results: [{ title: 'Result 1' }, { title: 'Result 2' }] }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await userEvent.type(searchInput, 'test query');
+    await userEvent.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByTestId('search-results')).toBeInTheDocument();
+      expect(screen.getByText('Result 1')).toBeInTheDocument();
+      expect(screen.getByText('Result 2')).toBeInTheDocument();
+    });
+  });
+
+  test('renders footer tagline', () => {
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    expect(screen.getByText('Explore constitutional documents from across the world')).toBeInTheDocument();
   });
 });
