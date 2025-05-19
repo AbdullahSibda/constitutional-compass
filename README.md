@@ -22,7 +22,8 @@
 
 ## Team Rules  
 - Discuss uncertainties in the group chat first  
-- Verify tests pass before any push to `dev`  
+- Verify tests pass before any push to `dev` 
+- Link to website is `https://wonderful-river-0d8fbf010.6.azurestaticapps.net/` 
 
 ## Backend Rules
 - Add all backend code to the api repo - constitutional-compass-api
