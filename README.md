@@ -4,7 +4,7 @@
 - For each sprint, make a new branch and push all code to that
 - At the end of the sprint, merge with `dev` branch  
 - Never push directly to `main` unless triggering deployment to Azure
-- Tests must pass before merging  
+- Tests MUST pass before merging  
 
 ## Setup Commands  
 - Install Node.js v18.20.4
@@ -12,6 +12,7 @@
 - Clone the repo
 - Cd into the repo
 - Run   `npm install`
+- run `npm start` to start the app locally
 
 ## Testing Rules  
 - All tests go in `src/tests/`  
