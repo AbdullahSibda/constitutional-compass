@@ -1,0 +1,117 @@
+:root {
+    --mid-dark: #2d3748;
+    --white: #ffffff;
+    --light-grey: #e2e8f0;
+    --teal-accent: #38b2ac;
+    --dark-bg: #1a202c;
+    --red-accent: #ff5252;
+  }
+  
+  .applications-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--dark-bg);
+    color: var(--white);
+  }
+  
+  .applications-container {
+    flex: 1;
+    padding: 1rem;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  
+  .applications-container header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-top: 2rem;
+  }
+  
+  .applications-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .application-card {
+    background-color: var(--mid-dark);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .application-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .application-info header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .application-info h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--white);
+  }
+  
+  .application-info p {
+    margin: 0;
+    color: var(--light-grey);
+    font-size: 0.9rem;
+  }
+  
+  .unauthorized, .loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--light-grey);
+  }
+  
+  .dismiss-button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dismiss-button:hover {
+  background-color: #cc0000;
+}
+
+.dismiss-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+  
+  /* Responsive adjustments */
+  @media (min-width: 48rem) {
+    .applications-container {
+      padding: 2rem;
+    }
+  
+    .application-info h2 {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @media (min-width: 64rem) {
+    .applications-container {
+      max-width: 1200px;
+    }
+  }
+  

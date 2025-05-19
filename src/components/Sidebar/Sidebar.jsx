@@ -70,29 +70,39 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <h1 className="sidebar-title">Constitutional Compass</h1>
       </section>
       <nav className="sidebar-nav">
-        <button className="auth-button google-signin" onClick={handleAuthAction}>
-          {user ? 'Sign Out' : 'Sign In with Google'}
-        </button>
-        <Link to="/" className="nav-link" onClick={() => setIsOpen(false)}>
-          Home
-        </Link>
-        <Link to="/about" className="nav-link">
-          About
-        </Link>
-        <Link to="/features" className="nav-link">
-          Features
-        </Link>
-        {(userRole === 'admin' || userRole === 'moderator') && (
-          <Link to="/dashboard" className="nav-link" onClick={() => setIsOpen(false)}>
-            Dashboard
-          </Link>
-        )}
-        {userRole === 'moderator' && (
-          <Link to="/applications" className="nav-link" onClick={() => setIsOpen(false)}>
-            Applications
-          </Link>
-        )}
-      </nav>
+  <button className="auth-button google-signin" onClick={handleAuthAction}>
+    {user ? 'Sign Out' : 'Sign In with Google'}
+  </button>
+  <Link to="/" className="nav-link" onClick={() => setIsOpen(false)}>
+    Home
+  </Link>
+  <Link to="/about" className="nav-link">
+    About
+  </Link>
+  <Link to="/features" className="nav-link">
+    Features
+  </Link>
+  {(userRole === 'admin' || userRole === 'moderator') && (
+    <Link to="/dashboard" className="nav-link" onClick={() => setIsOpen(false)}>
+      Dashboard
+    </Link>
+  )}
+  {userRole === 'moderator' && (
+    <>
+      <Link to="/applications" className="nav-link" onClick={() => setIsOpen(false)}>
+        Applications
+      </Link>
+    </>
+  )}
+  {userRole === 'moderator' && (
+    <>
+      <Link to="/Manage" className="nav-link" onClick={() => setIsOpen(false)}>
+        Manage
+      </Link>
+    </>
+  )}
+</nav>
+
       {applicationStatus && (
         <footer className="application-status">
           <h3>Application Status</h3>

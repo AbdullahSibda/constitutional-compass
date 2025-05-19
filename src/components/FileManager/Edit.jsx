@@ -1,105 +1,43 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../contexts/client';
 import { useAuth } from '../../contexts/AuthContext';
 import './Edit.css';
-
-const documentOptions = {
-    constitutional: [
-      { value: 'constitution_1996', label: 'Constitution of South Africa (1996)' },
-      { value: 'interim_constitution', label: 'Interim Constitution (1993)' },
-      { value: 'constitutional_amendment', label: 'Constitutional Amendment' },
-      { value: 'bill_of_rights', label: 'Bill of Rights' },
-      { value: 'founding_principles', label: 'Founding Principles Document' },
-    ],
-    legislation: [
-      { value: 'act_of_parliament', label: 'Act of Parliament' },
-      { value: 'regulation', label: 'Government Regulation' },
-      { value: 'bylaw', label: 'Municipal By-law' },
-      { value: 'white_paper', label: 'White Paper' },
-      { value: 'green_paper', label: 'Green Paper' },
-      { value: 'policy_document', label: 'Policy Document' },
-    ],
-    judicial: [
-      { value: 'constitutional_court', label: 'Constitutional Court Ruling' },
-      { value: 'supreme_court_appeal', label: 'Supreme Court of Appeal Decision' },
-      { value: 'high_court', label: 'High Court Decision' },
-      { value: 'magistrate_ruling', label: 'Magistrate Court Ruling' },
-      { value: 'legal_opinion', label: 'Legal Opinion' },
-    ],
-    human_rights: [
-      { value: 'south_african_hr_commission', label: 'SA Human Rights Commission Report' },
-      { value: 'udhr', label: 'Universal Declaration of Human Rights' },
-      { value: 'african_charter', label: 'African Charter on Human and Peoples\' Rights' },
-      { value: 'iccpr', label: 'ICCPR Document' },
-      { value: 'icescr', label: 'ICESCR Document' },
-      { value: 'cedaw', label: 'CEDAW Document' },
-      { value: 'crc', label: 'Convention on the Rights of the Child' },
-    ],
-    historical: [
-      { value: 'freedom_charter', label: 'Freedom Charter (1955)' },
-      { value: 'rivieraconference', label: 'Rivonia Trial Documents' },
-      { value: 'codesa_documents', label: 'CODESA Negotiation Records' },
-      { value: 'truth_reconciliation', label: 'Truth & Reconciliation Commission Report' },
-      { value: 'apartheid_law', label: 'Historical Apartheid-Era Law' },
-    ],
-    administrative: [
-      { value: 'gazette_notice', label: 'Government Gazette Notice' },
-      { value: 'ministerial_directive', label: 'Ministerial Directive' },
-      { value: 'circular', label: 'Departmental Circular' },
-      { value: 'tender_notice', label: 'Tender or Procurement Document' },
-      { value: 'presidential_proclamation', label: 'Presidential Proclamation' },
-      { value: 'executive_order', label: 'Executive Instruction/Order' },
-    ]
-  };
 
   export default function Edit({ item, onEditSuccess, onCancel }) {
     useAuth();
     const [folderName, setFolderName] = useState(item.name || '');
     const [metadata, setMetadata] = useState({
       displayName: '',
-      documentType: '',
+      description: '',
       year: '',
       author: ''
-    });
-    const [selectedCategory, setSelectedCategory] = useState('');
+    }); 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [touched, setTouched] = useState({
       name: false,
       displayName: false,
-      documentType: false
+      description: false
     });
     const [existingNames, setExistingNames] = useState([]);
   
-    const getCategoryFromDocumentType = useCallback((docType) => {
-      for (const [category, options] of Object.entries(documentOptions)) {
-        if (options.some(option => option.value === docType)) {
-          return category;
-        }
-      }
-      return '';
-    }, []);
-  
-    // Initialize metadata and category
     useEffect(() => {
       if (!item.is_folder) {
         setMetadata({
           displayName: item.metadata?.displayName || item.name,
-          documentType: item.metadata?.type || '',
+          description: item.metadata?.description || '',
           year: item.metadata?.year || '',
           author: item.metadata?.author || ''
         });
-        setSelectedCategory(getCategoryFromDocumentType(item.metadata?.type || ''));
       }  
       
-      // Fetch existing names in the same parent directory
       const fetchExistingNames = async () => {
         const { data, error } = await supabase
           .from('documents')
           .select('name, metadata')
           .eq('parent_id', item.parent_id)
-          .neq('id', item.id); // Exclude current item
+          .neq('id', item.id);
         
         if (!error && data) {
           const names = data.map(item => {
@@ -112,16 +50,15 @@ const documentOptions = {
       };
 
       fetchExistingNames();
-    }, [item, getCategoryFromDocumentType]);
+    }, [item]);
   
-    // Escape key handler
+
     useEffect(() => {
       const handleKeyDown = (e) => e.key === 'Escape' && onCancel();
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }, [onCancel]);
   
-    // Success handler
     useEffect(() => {
       if (success) {
         const timer = setTimeout(onEditSuccess, 2000);
@@ -130,10 +67,7 @@ const documentOptions = {
     }, [success, onEditSuccess]);
   
     const handleNameChange = (e) => setFolderName(e.target.value);
-    const handleCategoryChange = (e) => {
-      setSelectedCategory(e.target.value);
-      setMetadata(prev => ({ ...prev, documentType: '' }));
-    };
+    
     const handleMetadataChange = (e) => {
       const { name, value } = e.target;
       setMetadata(prev => ({ ...prev, [name]: value }));
@@ -161,8 +95,8 @@ const documentOptions = {
           setError('Display name is required');
           return false;
         }
-        if (!metadata.documentType) {
-          setError('Document type is required');
+        if (!metadata.description) {
+          setError('Description is required');
           return false;
         }
         const currentDisplayName = item.metadata?.displayName || item.name;
@@ -189,7 +123,7 @@ const documentOptions = {
       const updatedMetadata = {
         ...item.metadata,
         displayName: metadata.displayName,
-        type: metadata.documentType,
+        description: metadata.description,
         year: metadata.year || null,
         author: metadata.author || null
       };
@@ -305,54 +239,24 @@ const documentOptions = {
         </section>
   
         <section className="form-group">
-          <label htmlFor="categorySelect">Document Category *</label>
-          <select
-            id="categorySelect"
-            name="categorySelect"
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            onBlur={handleBlur}
-            required
-            aria-invalid={touched.documentType && !metadata.documentType}
-            aria-describedby={touched.documentType && !metadata.documentType ? "documentType-error" : undefined}
-          >
-            <option value="">Select a category...</option>
-            {Object.entries({
-              constitutional: 'Constitutional & Foundational',
-              legislation: 'Legislation & Policy',
-              judicial: 'Judicial Decisions',
-              human_rights: 'Human Rights & International',
-              historical: 'Historical & Liberation Documents',
-              administrative: 'Government Notices & Admin'
-            }).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </section>
-  
-        <section className="form-group">
-          <label htmlFor="documentType">Document Type *</label>
-          <select
-            id="documentType"
-            name="documentType"
-            value={metadata.documentType}
+          <label htmlFor="description">Description *</label>
+          <textarea
+            id="description"
+            name="description"
+            value={metadata.description}
             onChange={handleMetadataChange}
             onBlur={handleBlur}
+            placeholder="Provide a detailed description of the document..."
             required
-            disabled={!selectedCategory}
-            aria-invalid={touched.documentType && !metadata.documentType}
-            aria-describedby={touched.documentType && !metadata.documentType ? "documentType-error" : undefined}
-          >
-            <option value="">Select document type...</option>
-            {documentOptions[selectedCategory]?.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          {touched.documentType && !metadata.documentType && (
-            <p id="documentType-error" className="error-text">Document type is required</p>
+            rows={4}
+            aria-invalid={touched.description && !metadata.description.trim()}
+            aria-describedby={touched.description && !metadata.description.trim() ? "description-error" : undefined}
+          />
+          {touched.description && !metadata.description.trim() && (
+            <p id="description-error" className="error-text">Description is required</p>
           )}
         </section>
-  
+        
         <section className="form-group">
           <label htmlFor="year">Year</label>
           <input

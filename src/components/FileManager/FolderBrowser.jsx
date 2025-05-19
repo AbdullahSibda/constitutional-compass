@@ -8,7 +8,6 @@ import ContextMenu from './ContextMenu';
 import Delete from './Delete';
 import Filter from './Filter';
 import FileViewer from './FileViewer';
-import { documentTypes } from './documentTypes';
 import './FolderBrowser.css';
 
 const ROOT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
@@ -416,11 +415,9 @@ function FolderBrowser() {
                     <option value="">Select filter criteria</option>
                     <option value="year">Year</option>
                     <option value="file_type">File Type</option>
-                    <option value="type">Document Type</option>
                   </select>
                   {filterCriteria && (
                     <>
-                      {filterCriteria === 'year' || filterCriteria === 'file_type' ? (
                         <input
                           type="text"
                           value={filterValue}
@@ -428,24 +425,6 @@ function FolderBrowser() {
                           placeholder={`Enter ${filterCriteria === 'year' ? 'year (e.g., 2023)' : 'file extension (e.g., pdf)'}`}
                           aria-label={`Enter ${filterCriteria === 'year' ? 'year' : 'file type'}`}
                         />
-                      ) : (
-                        <select
-                          value={filterValue}
-                          onChange={(e) => setFilterValue(e.target.value)}
-                          aria-label="Select document type"
-                        >
-                          <option value="">Select a type</option>
-                          {documentTypes.map(group => (
-                            <optgroup key={group.group} label={group.group}>
-                              {group.options.map(option => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))}
-                        </select>
-                      )}
                       <button onClick={handleApplyFilter} disabled={!filterValue}>
                         Apply
                       </button>
@@ -572,7 +551,7 @@ function FolderBrowser() {
   );
 }
 
-export function ContentsDisplay({ contents, loading, showSearch, hasSearchResults, isFilterActive, movingItem, navigateToFolder, handleContextMenu, handleViewFile, contextMenu }) {
+export function ContentsDisplay({ contents, loading, showSearch, hasSearchResults, isFilterActive, movingItem, navigateToFolder, handleContextMenu, contextMenu }) {
   if (loading) {
     return <p className="loading-indicator">Loading contents...</p>;
   }

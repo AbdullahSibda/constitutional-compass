@@ -8,6 +8,7 @@ import AuthCallback from "./components/Auth/AuthCallback";
 import Applications from "./components/Applications/Applications";
 import About from "./components/About/About";
 import Features from "./components/Features/Features";
+import Manage from "./components/Manage/Manage"
 
 const AppLayout = () => {
   return (
@@ -64,6 +65,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Applications />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/Manage",
+        element: (
+          <ProtectedRoute>
+            <Manage />
           </ProtectedRoute>
         )
       }

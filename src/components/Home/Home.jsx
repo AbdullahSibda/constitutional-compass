@@ -212,7 +212,7 @@ const Home = () => {
           </form>
         </article>
 
-        <section className="search-results-container" aria-live="polite">
+        <section className="search-results-container" aria-live="polite" aria-label="Search results">
           {isSearching && (
             <p aria-busy="true" className="loading-indicator">Searching...</p>
           )}
