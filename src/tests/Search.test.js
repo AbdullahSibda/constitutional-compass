@@ -31,43 +31,47 @@ const mockDocuments = [
     parent_id: 'subfolder1',
     metadata: { displayName: 'Another Doc', file_type: 'DOCX', type: 'Report', year: '2024' },
     parentFolder: { id: 'subfolder1', name: 'Subfolder 1' },
-  }
+  },
 ];
 
 const mockFolders = [
   { id: 'subfolder1', is_folder: true, parent_id: 'folder1' },
-  { id: 'subfolder2', is_folder: true, parent_id: 'folder1' }
+  { id: 'subfolder2', is_folder: true, parent_id: 'folder1' },
 ];
 
 const mockQueryChain = {
   select: jest.fn().mockReturnThis(),
   eq: jest.fn().mockReturnThis(),
   or: jest.fn().mockReturnThis(),
-  in: jest.fn().mockResolvedValue({ data: mockDocuments, error: null }),
+  in: jest.fn().mockReturnThis(),
   neq: jest.fn().mockReturnThis(),
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   supabase.from.mockImplementation((table) => {
-    if (table === 'documents') {
-      return {
-        ...mockQueryChain,
-        // Mock different responses based on query type
-        in: jest.fn().mockImplementation((field, values) => {
-          if (field === 'parent_id') {
-            // Mock response for folder search
-            return Promise.resolve({ 
-              data: mockFolders.filter(f => values.includes(f.parent_id)), 
-              error: null 
-            });
-          }
-          // Mock response for document search
-          return Promise.resolve({ data: mockDocuments, error: null });
-        })
-      };
-    }
-    return mockQueryChain;
+    if (table !== 'documents') return mockQueryChain;
+    return {
+      select: jest.fn().mockImplementation((query) => {
+        const chain = { ...mockQueryChain };
+        if (query === '*, parentFolder:parent_id (id, name)') {
+          chain.in = jest.fn().mockResolvedValue({ data: mockDocuments, error: null });
+        } else if (query === 'id') {
+          chain.eq = jest.fn().mockReturnThis();
+          chain.neq = jest.fn().mockReturnThis();
+          chain.in = jest.fn().mockImplementation((field, values) => {
+            if (field === 'parent_id') {
+              return Promise.resolve({
+                data: mockFolders.filter((f) => values.includes(f.parent_id)),
+                error: null,
+              });
+            }
+            return Promise.resolve({ data: [], error: null });
+          });
+        }
+        return chain;
+      }),
+    };
   });
 });
 
@@ -142,4 +146,21 @@ describe('Search Component', () => {
     expect(input).toHaveValue('');
     expect(mockOnClearSearch).toHaveBeenCalled();
   });
+ 
+  test('handles search with whitespace-only query', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const input = screen.getByPlaceholderText(/search files/i);
+    await user.type(input, '   ');
+
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    await waitFor(() => {
+      expect(mockOnClearSearch).toHaveBeenCalledTimes(1);
+      expect(supabase.from).not.toHaveBeenCalled();
+      expect(mockOnSearchResults).not.toHaveBeenCalled();
+    });
+  });
+
 });
