@@ -50,7 +50,6 @@ describe('Upload Component', () => {
       ok: true,
       text: jest.fn().mockResolvedValue('Success'),
     });
-    render(<div />).unmount();
   });
 
   afterEach(() => {
@@ -203,7 +202,7 @@ describe('Upload Component', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText('File size exceeds 50MB limit')).toBeInTheDocument();
+      expect(screen.getByText(/File size exceeds 50MB limit/i)).toBeInTheDocument();
       expect(supabase.storage.from().upload).not.toHaveBeenCalled();
       expect(supabase.from().insert).not.toHaveBeenCalled();
     }, { timeout: 3000 });
@@ -250,7 +249,7 @@ describe('Upload Component', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText("Couldn't verify file uniqueness")).toBeInTheDocument();
+      expect(screen.getByText(/Couldn't verify file uniqueness/i)).toBeInTheDocument();
       expect(supabase.storage.from().upload).not.toHaveBeenCalled();
       expect(supabase.from().insert).not.toHaveBeenCalled();
       expect(mockOnUploadSuccess).not.toHaveBeenCalled();
@@ -288,9 +287,124 @@ describe('Upload Component', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText('Missing required fields or form is disabled')).toBeInTheDocument();
+      expect(screen.getByText(/Missing required fields or form is disabled/i)).toBeInTheDocument();
       expect(supabase.storage.from().upload).not.toHaveBeenCalled();
       expect(supabase.from().insert).not.toHaveBeenCalled();
     }, { timeout: 3000 });
+  });
+
+  test('handles Supabase storage upload error', async () => {
+    jest.setTimeout(10000);
+    const user = userEvent.setup();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    
+    supabase.storage.from.mockImplementation(() => ({
+      upload: jest.fn().mockResolvedValue({ data: null, error: new Error('Storage upload failed') }),
+      remove: jest.fn().mockResolvedValue({ error: null }),
+    }));
+    
+    render(<Upload parentId="folder1" onUploadSuccess={mockOnUploadSuccess} />);
+    
+    const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
+    const fileInput = screen.getByLabelText(/Select File/i);
+    
+    await act(async () => {
+      await user.upload(fileInput, file);
+    });
+    
+    const descriptionInput = screen.getByLabelText('Description *');
+    
+    await act(async () => {
+      await user.type(descriptionInput, 'Test description');
+    });
+    
+    const submitButton = screen.getByRole('button', { name: /Upload Document/i });
+    
+    await act(async () => {
+      await user.click(submitButton);
+    });
+    
+    await waitFor(() => {
+      const errorArticle = screen.getByRole('alert');
+      expect(errorArticle).toHaveTextContent(/Storage upload failed/i);
+      expect(console.error).toHaveBeenCalledWith('handleUpload: catch error', expect.any(Error));
+      expect(supabase.storage.from().remove).not.toHaveBeenCalled();
+    }, { timeout: 5000 });
+    
+    console.error.mockRestore();
+  });
+
+  test('handles Azure function processing failure', async () => {
+    jest.setTimeout(10000);
+    const user = userEvent.setup();
+    global.fetch.mockResolvedValue({
+      ok: false,
+      text: jest.fn().mockResolvedValue('Processing error'),
+    });
+    
+    render(<Upload parentId="folder1" onUploadSuccess={mockOnUploadSuccess} />);
+    
+    const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
+    const fileInput = screen.getByLabelText(/Select File/i);
+    
+    await act(async () => {
+      await user.upload(fileInput, file);
+    });
+    
+    const descriptionInput = screen.getByLabelText('Description *');
+    
+    await act(async () => {
+      await user.type(descriptionInput, 'Test description');
+    });
+    
+    const submitButton = screen.getByRole('button', { name: /Upload Document/i });
+    
+    await act(async () => {
+      await user.click(submitButton);
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Processing failed: Processing error/i)).toBeInTheDocument();
+      expect(mockOnUploadSuccess).not.toHaveBeenCalled();
+    }, { timeout: 5000 });
+  });
+
+  test('successfully uploads file and resets form', async () => {
+    jest.setTimeout(10000);
+    const user = userEvent.setup();
+    
+    render(<Upload parentId="folder1" onUploadSuccess={mockOnUploadSuccess} />);
+    
+    const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', { value: 1024 * 1024 }); // 1MB
+    const fileInput = screen.getByLabelText(/Select File/i);
+    
+    await act(async () => {
+      await user.upload(fileInput, file);
+    });
+    
+    const descriptionInput = screen.getByLabelText('Description *');
+    const displayNameInput = screen.getByLabelText('Display Name *');
+    
+    await act(async () => {
+      await user.type(descriptionInput, 'Test description');
+      await user.type(displayNameInput, 'Test Document');
+    });
+    
+    const submitButton = screen.getByRole('button', { name: /Upload Document/i });
+    
+    await act(async () => {
+      await user.click(submitButton);
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Document uploaded successfully/i)).toBeInTheDocument();
+      expect(mockOnUploadSuccess).toHaveBeenCalled();
+      expect(displayNameInput).toHaveValue('');
+      expect(descriptionInput).toHaveValue('');
+      expect(screen.queryByText('test.pdf')).not.toBeInTheDocument();
+    }, { timeout: 5000 });
   });
 });
