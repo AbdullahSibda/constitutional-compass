@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { canReadDocument, deleteItem, restoreItem, permanentlyDeleteItem } from './Delete';
+import { deleteItem, restoreItem, permanentlyDeleteItem } from './Delete';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function ContextMenu({
