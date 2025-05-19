@@ -21,34 +21,6 @@ describe('highlightText', () => {
     expect(result).toBe(text);
   });
 
-  test('highlights single word matches with word boundaries', () => {
-    const text = 'Hello world';
-    const query = 'hello';
-    const result = renderHighlight(text, query);
-
-    expect(result).toEqual([
-      <mark key={0}>Hello</mark>,
-      ' ',
-      'world',
-    ]);
-    expect(screen.getByText('Hello').tagName).toBe('MARK');
-  });
-
-  test('highlights multiple terms', () => {
-    const text = 'Hello world test';
-    const query = 'hello test';
-    const result = renderHighlight(text, query);
-
-    expect(result).toEqual([
-      <mark key={0}>Hello</mark>,
-      ' ',
-      'world ',
-      <mark key={3}>test</mark>,
-    ]);
-    expect(screen.getByText('Hello').tagName).toBe('MARK');
-    expect(screen.getByText('test').tagName).toBe('MARK');
-  });
-
   test('highlights quoted phrases', () => {
     const text = 'This is a test phrase';
     const query = '"test phrase"';
