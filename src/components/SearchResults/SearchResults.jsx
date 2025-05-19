@@ -7,34 +7,17 @@ const textToSpeech = (text) => {
     alert("Your browser does not support text-to-speech.");
     return;
   }
-
   const speech = new SpeechSynthesisUtterance(text);
   speech.lang = "en-US";
   window.speechSynthesis.speak(speech);
 };
-const formatResultsAsText = (results) => {
-  let output = '';
-  for (const [filename, matches] of Object.entries(results)) {
-    output += `=== ${filename} ===\n\n`;
-    matches.forEach(match => {
-      output += `• "${match.content}"\n  Match: ${match.match}%\n\n`;
-    });
-  }
-  return output;
-};
 
-const download = (results) => {
-  let content = "";
+const download = (result) => {
+  let content = `FROM: ${result.title} \n\n`;
 
-  results.forEach((result, index) => {
-    content += `=== ${result.title} ===\n\n`;
-
-    result.snippets.forEach((snippet) => {
-      const matchPercentage = Math.round((1 - snippet.score) * 100);
-      content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
-    });
-
-    content += "\n\n"; 
+  result.snippets.forEach((snippet) => {
+    const matchPercentage = Math.round((1 - snippet.score) * 100);
+    content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
   });
 
   const blob = new Blob([content], { type: "text/plain" });
@@ -42,12 +25,11 @@ const download = (results) => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = "all_search_results.pdf";
+  link.download = `${result.title.replace(/\.pdf$/i, "")}_results.txt`;
   link.click();
 
   URL.revokeObjectURL(url);
 };
-
 
 const SearchResults = ({ results, query }) => {
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
@@ -130,7 +112,7 @@ const SearchResults = ({ results, query }) => {
       {renderSnippets(result.snippets)}
 
       <section className="download-button-container">
-        <button className="download-button" onClick={() => download(filteredResults)}>
+        <button className="download-button" onClick={() => download(result)}>
           Download
         </button>
       </section>
