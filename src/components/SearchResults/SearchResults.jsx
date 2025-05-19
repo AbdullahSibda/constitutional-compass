@@ -56,16 +56,16 @@ const SearchResults = ({ results, query }) => {
     return groups;
   };
 
-  const renderSnippets = (snippets) => (
-    <section className="snippets-container">
-      {snippets.map((snippet, idx) => (
-        <blockquote key={idx} className="snippet">
-          <p className="snippet-text">{highlightText(snippet.text, query)}</p>
-          <footer className="similarity-score">{Math.round(100 -(1 + snippet.score) * 100)}% match</footer>
-        </blockquote>
-      ))}
-    </section>
-  );
+const renderSnippets = (snippets) => (
+  <section className="snippets-container">
+    {snippets.map((snippet, idx) => (
+      <blockquote key={idx} className="snippet">
+        <p className="snippet-text">{highlightText(snippet.text, query)}</p>
+        <footer className="similarity-score">{Math.round((1 - snippet.score) * 100)}% match</footer>
+      </blockquote>
+    ))}
+  </section>
+);
 
   const renderResultCard = (result, index) => (
     <article key={index} className="result-card">
