@@ -211,6 +211,7 @@ describe('FolderBrowser Component', () => {
     jest.spyOn(console, 'error').mockRestore();
   });
 
+  // Original tests
   test('renders loading state initially', async () => {
     render(
       <MemoryRouter>
@@ -573,5 +574,102 @@ describe('FolderBrowser Component', () => {
       expect(screen.getByText('Constitution Archive')).toHaveAttribute('aria-current', 'page');
     });
     expect(screen.queryByRole('button', { name: 'Go Up' })).not.toBeInTheDocument();
+  });
+
+  test('isDescendant detects folder hierarchy', async () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Subfolder 1' })).toBeInTheDocument();
+    });
+    const fileContainer = screen.getByRole('button', { name: 'Open folder Subfolder 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await userEvent.click(moreActionsButton);
+    await userEvent.click(screen.getByRole('button', { name: 'Move' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Move Here' })).toBeDisabled();
+    });
+  });
+
+  test('handleDownload handles download error', async () => {
+    supabase.storage.from.mockReturnValue({
+      download: jest.fn().mockResolvedValue({ data: null, error: { message: 'Download failed' } }),
+    });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    });
+    const fileContainer = screen.getByRole('button', { name: 'View file File 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await user.click(screen.getByRole('button', { name: 'Download' }));
+    await waitFor(() => {
+      expect(screen.getByText('Error: Failed to download file: Download failed')).toBeInTheDocument();
+    });
+  });
+
+  test('renders and dismisses error message', async () => {
+    supabase.from.mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      then: jest.fn().mockImplementation((cb) =>
+        Promise.resolve(cb({ data: null, error: { message: 'Network error' } }))
+      ),
+    }));
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Error: Network error')).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    await waitFor(() => {
+      expect(screen.queryByText('Error: Network error')).not.toBeInTheDocument();
+    });
+  });
+
+  test('closes context menu on outside click', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    });
+    const fileContainer = screen.getByRole('button', { name: 'View file File 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+    await user.click(document.body);
+    await waitFor(() => {
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
   });
 });
