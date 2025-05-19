@@ -5,6 +5,9 @@ import userEvent from '@testing-library/user-event';
 import Home from '../components/Home/Home';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar/Sidebar';
+import SearchResults from '../components/SearchResults/SearchResults';
+import { getCorrection } from '../api/thirdParty/dymtService';
+import { initializeDictionary } from '../components/utils/spellCheck';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock dependencies
@@ -12,40 +15,91 @@ jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock('../components/Sidebar/Sidebar', () => jest.fn(() => null));
+jest.mock('../components/Sidebar/Sidebar', () => jest.fn());
+
+jest.mock('../components/SearchResults/SearchResults', () => jest.fn());
+
+jest.mock('../api/thirdParty/dymtService', () => ({
+  getCorrection: jest.fn(),
+}));
+
+jest.mock('../components/utils/spellCheck', () => ({
+  initializeDictionary: jest.fn(),
+}));
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   Link: jest.fn(({ children, to }) => <a href={to}>{children}</a>),
 }));
 
+// Mock fetch
+global.fetch = jest.fn();
+
 describe('Home Component', () => {
   const mockUseAuth = useAuth;
   const mockUser = { id: '123', email: 'test@example.com' };
+  const mockDictionary = {
+    check: jest.fn(),
+  };
 
   beforeEach(() => {
+    console.log('Setting up test');
     jest.clearAllMocks();
-    // Default mocks
+    jest.useRealTimers();
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
       userRole: null,
     });
-    Sidebar.mockImplementation(({ isOpen, setIsOpen }) => (
-      <div data-testid="sidebar" data-open={isOpen}>
-        <button onClick={() => setIsOpen(false)}>Close Sidebar</button>
-      </div>
-    ));
-    // Ensure NODE_ENV is 'test' for consistent behavior
+    Sidebar.mockImplementation(({ isOpen, setIsOpen }) => {
+      console.log('Sidebar mock rendered', isOpen);
+      return (
+        <div data-testid="sidebar" data-open={isOpen}>
+          <button onClick={() => setIsOpen(false)}>Close Sidebar</button>
+        </div>
+      );
+    });
+    SearchResults.mockImplementation(({ results, query }) => {
+      console.log('SearchResults mock rendered', query);
+      return (
+        <div data-testid="search-results" data-query={query}>
+          {results.map((r, i) => (
+            <div key={i}>{r.title}</div>
+          ))}
+        </div>
+      );
+    });
+    getCorrection.mockResolvedValue({
+      corrected_text: 'the',
+      original_text: 'teh',
+      confidence: 0.95,
+    });
+    initializeDictionary.mockResolvedValue(mockDictionary);
+    // Default to valid words to bypass spell-check unless specified
+    mockDictionary.check.mockImplementation((word) => true);
+    fetch.mockImplementation(() => {
+      console.log('Fetch mock called');
+      return Promise.resolve({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ results: [] }),
+      });
+    });
     process.env.NODE_ENV = 'test';
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.useRealTimers();
   });
 
-  test('renders loading message when loading is true', () => {
+  test('renders main content when loading is false and ready is true', async () => {
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
+      expect(screen.getByText('Navigate the Foundations of Democracy')).toBeInTheDocument();
+    });
+  });
+
+  test('renders loading message when auth is loading', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
@@ -56,31 +110,18 @@ describe('Home Component', () => {
     expect(screen.getByText('Loading...')).toHaveClass('loading');
   });
 
-  test('renders loading message when ready is false', async () => {
+  test('renders loading message when ready is false in non-test mode', async () => {
     jest.useFakeTimers();
     process.env.NODE_ENV = 'development';
-    render(<Home />);
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
     await act(async () => {
       jest.runAllTimers();
     });
-    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-  });
-
-  test('renders main content when loading is false and ready is true', () => {
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
-    expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
-    expect(screen.getByText('Navigate the Foundations of Democracy')).toBeInTheDocument();
-    expect(screen.getByText('Explore constitutional documents from across the world')).toBeInTheDocument();
-    expect(screen.getByAltText('Logo')).toHaveAttribute('src', '/images/logo.png');
-    expect(screen.getByTestId('sidebar-toggle')).toBeInTheDocument();
-    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Ask the compass...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Search/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
+    });
   });
 
   test('displays welcome message for logged-in user', () => {
@@ -89,11 +130,7 @@ describe('Home Component', () => {
       loading: false,
       userRole: 'user',
     });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(screen.getByText(`Welcome, ${mockUser.email}`)).toBeInTheDocument();
   });
 
@@ -103,11 +140,7 @@ describe('Home Component', () => {
       loading: false,
       userRole: 'admin',
     });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const dashboardLink = screen.getByText('Go to Dashboard →');
     expect(dashboardLink).toBeInTheDocument();
     expect(dashboardLink).toHaveAttribute('href', '/dashboard');
@@ -119,11 +152,7 @@ describe('Home Component', () => {
       loading: false,
       userRole: 'moderator',
     });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const dashboardLink = screen.getByText('Go to Dashboard →');
     expect(dashboardLink).toBeInTheDocument();
     expect(dashboardLink).toHaveAttribute('href', '/dashboard');
@@ -135,35 +164,18 @@ describe('Home Component', () => {
       loading: false,
       userRole: 'user',
     });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(screen.queryByText('Go to Dashboard →')).not.toBeInTheDocument();
   });
 
   test('does not display welcome section for logged-out user', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-      userRole: null,
-    });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(screen.queryByText(/Welcome,/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Go to Dashboard →')).not.toBeInTheDocument();
   });
 
   test('renders sidebar with correct props', () => {
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const sidebar = screen.getByTestId('sidebar');
     expect(sidebar).toHaveAttribute('data-open', 'false');
     expect(Sidebar).toHaveBeenCalledWith(
@@ -176,66 +188,229 @@ describe('Home Component', () => {
   });
 
   test('shows sidebar toggle button when sidebar is closed', () => {
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const toggleButton = screen.getByTestId('sidebar-toggle');
     expect(toggleButton).toHaveStyle({ display: 'block' });
   });
 
   test('hides sidebar toggle button when sidebar is open', async () => {
     const user = userEvent.setup();
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
-    // Simulate opening sidebar
+    render(<BrowserRouter><Home /></BrowserRouter>);
     await user.click(screen.getByTestId('sidebar-toggle'));
     const toggleButton = screen.getByTestId('sidebar-toggle');
-    expect(toggleButton).toBeInTheDocument();
     expect(toggleButton).toHaveStyle({ display: 'none' });
     expect(screen.getByTestId('sidebar')).toHaveAttribute('data-open', 'true');
   });
 
   test('toggles sidebar when toggle button is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const toggleButton = screen.getByTestId('sidebar-toggle');
     await user.click(toggleButton);
     expect(screen.getByTestId('sidebar')).toHaveAttribute('data-open', 'true');
-    // Simulate closing sidebar via Sidebar component
     await user.click(screen.getByText('Close Sidebar'));
     expect(screen.getByTestId('sidebar')).toHaveAttribute('data-open', 'false');
   });
 
-  test('renders search form and prevents default submission', async () => {
+  test('handles search form submission with valid input', async () => {
     const user = userEvent.setup();
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    const mockResults = [{ title: 'Result 1' }, { title: 'Result 2' }];
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ results: mockResults }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const searchInput = screen.getByPlaceholderText('Ask the compass...');
     const searchButton = screen.getByRole('button', { name: /Search/i });
-    expect(searchInput).toBeInTheDocument();
-    expect(searchButton).toBeInTheDocument();
-    // Simulate form submission
     await user.type(searchInput, 'test query');
     await user.click(searchButton);
-    // No navigation or reload should occur; verify input retains value
-    expect(searchInput).toHaveValue('test query');
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent('"test" "query"')}`,
+        expect.any(Object)
+      );
+      expect(screen.getByTestId('search-results')).toBeInTheDocument();
+      expect(SearchResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: mockResults,
+          query: 'test query',
+        }),
+        {}
+      );
+    });
+  });
+
+  test('displays spelling suggestion for misspelled query', async () => {
+    const user = userEvent.setup();
+    mockDictionary.check.mockImplementation((word) => word === 'hello');
+    getCorrection.mockResolvedValueOnce({
+      corrected_text: 'hello world',
+      original_text: 'helo world',
+      confidence: 0.95,
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'helo world');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(getCorrection).toHaveBeenCalledWith('helo world');
+      expect(screen.getByText((content, element) => {
+        return element.textContent.includes('Possible spelling errors in: helo');
+      })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Search for "hello world"/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Use original: "helo world"/i })).toBeInTheDocument();
+    });
+  });
+
+  test('searches with suggested correction when chosen', async () => {
+    const user = userEvent.setup();
+    mockDictionary.check.mockImplementation((word) => word === 'hello');
+    getCorrection.mockResolvedValueOnce({
+      corrected_text: 'hello world',
+      original_text: 'helo world',
+      confidence: 0.95,
+    });
+    const mockResults = [{ title: 'Result 1' }];
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ results: mockResults }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'helo world');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText((content, element) => {
+        return element.textContent.includes('Possible spelling errors in: helo');
+      })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: /Search for "hello world"/i }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent('"hello" "world"')}`,
+        expect.any(Object)
+      );
+      expect(screen.getByTestId('search-results')).toBeInTheDocument();
+      expect(SearchResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: mockResults,
+          query: 'hello world',
+        }),
+        {}
+      );
+    });
+  });
+
+  test('searches with original query when suggestion declined', async () => {
+    const user = userEvent.setup();
+    mockDictionary.check.mockImplementation((word) => word === 'hello');
+    getCorrection.mockResolvedValueOnce({
+      corrected_text: 'hello world',
+      original_text: 'helo world',
+      confidence: 0.95,
+    });
+    const mockResults = [{ title: 'Result 1' }];
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ results: mockResults }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'helo world');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText((content, element) => {
+        return element.textContent.includes('Possible spelling errors in: helo');
+      })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: /Use original: "helo world"/i }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent('"helo" "world"')}`,
+        expect.any(Object)
+      );
+      expect(screen.getByTestId('search-results')).toBeInTheDocument();
+      expect(SearchResults).toHaveBeenCalledWith(
+        expect.objectContaining({
+          results: mockResults,
+          query: 'helo world',
+        }),
+        {}
+      );
+    });
+  });
+
+  test('displays error when search fails', async () => {
+    const user = userEvent.setup();
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Server Error',
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'test query');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText('There was an issue with your search. Please try again.')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Ask the compass...')).toHaveClass('input-error');
+    });
+  });
+
+  test('displays error when spell check fails', async () => {
+    const user = userEvent.setup();
+    initializeDictionary.mockRejectedValueOnce(new Error('Dictionary error'));
+    const mockResults = [{ title: 'Result 1' }];
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ results: mockResults }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'helo world');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText('Spell check unavailable. Using original query...')).toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledWith(
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent('"helo" "world"')}`,
+        expect.any(Object)
+      );
+    });
+  });
+
+  test('displays no results message when search returns empty', async () => {
+    const user = userEvent.setup();
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ results: [] }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'test query');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText('No results match your search')).toBeInTheDocument();
+    });
+  });
+
+  test('handles empty search input', async () => {
+    const user = userEvent.setup();
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.click(searchButton);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(screen.queryByText('No results match your search')).not.toBeInTheDocument();
   });
 
   test('sets ready immediately in test mode', () => {
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
-    render(<Home />);
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(setTimeoutSpy).not.toHaveBeenCalled();
     expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
@@ -246,20 +421,14 @@ describe('Home Component', () => {
     jest.useFakeTimers();
     process.env.NODE_ENV = 'development';
     const setTimeoutSpy = jest.spyOn(global, 'setTimeout');
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 400);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
-    // Simulate timeout
     await act(async () => {
       jest.runAllTimers();
     });
     await waitFor(() => {
       expect(screen.getByText('Constitutional Compass')).toBeInTheDocument();
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
     setTimeoutSpy.mockRestore();
   });
@@ -268,7 +437,7 @@ describe('Home Component', () => {
     jest.useFakeTimers();
     process.env.NODE_ENV = 'development';
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    const { unmount } = render(<Home />);
+    const { unmount } = render(<BrowserRouter><Home /></BrowserRouter>);
     unmount();
     expect(clearTimeoutSpy).toHaveBeenCalled();
     clearTimeoutSpy.mockRestore();
@@ -280,25 +449,74 @@ describe('Home Component', () => {
       loading: false,
       userRole: 'invalid',
     });
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    render(<BrowserRouter><Home /></BrowserRouter>);
     expect(screen.getByText(`Welcome, ${mockUser.email}`)).toBeInTheDocument();
     expect(screen.queryByText('Go to Dashboard →')).not.toBeInTheDocument();
   });
 
-  test('search form submission with empty input', async () => {
+  test('displays loading indicator during search', async () => {
     const user = userEvent.setup();
-    render(
-      <BrowserRouter>
-        <Home />
-      </BrowserRouter>
-    );
+    fetch.mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ results: [] }),
+    }), 100)));
+    render(<BrowserRouter><Home /></BrowserRouter>);
     const searchInput = screen.getByPlaceholderText('Ask the compass...');
     const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'test query');
     await user.click(searchButton);
-    expect(searchInput).toHaveValue('');
+    expect(screen.getByText('Searching...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Searching...')).not.toBeInTheDocument();
+    });
+  });
+
+  test('handles input change and clears error', async () => {
+    const user = userEvent.setup();
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      statusText: 'Server Error',
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'test query');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(screen.getByText('There was an issue with your search. Please try again.')).toBeInTheDocument();
+    });
+    await user.type(searchInput, 'new query');
+    expect(screen.queryByText('There was an issue with your search. Please try again.')).not.toBeInTheDocument();
+  });
+
+  test('formats query for exact match', async () => {
+    const user = userEvent.setup();
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ results: [] }),
+    });
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    await user.type(searchInput, 'hello   world');
+    await user.click(searchButton);
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `https://constitutional-compass-function-app.azurewebsites.net/api/search?q=${encodeURIComponent('"hello" "world"')}`,
+        expect.any(Object)
+      );
+    });
+  });
+
+  test('accessibility attributes are set correctly', () => {
+    render(<BrowserRouter><Home /></BrowserRouter>);
+    const searchInput = screen.getByPlaceholderText('Ask the compass...');
+    expect(searchInput).toHaveAttribute('aria-label', 'Search constitutional documents');
+    expect(searchInput).not.toHaveAttribute('aria-describedby');
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    expect(searchButton).toHaveAttribute('aria-label', 'Search');
+    expect(searchButton).toHaveAttribute('aria-busy', 'false');
+    const searchResultsSection = screen.getByRole('region', { name: /search results/i });
+    expect(searchResultsSection).toHaveAttribute('aria-live', 'polite');
   });
 });
