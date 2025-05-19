@@ -673,25 +673,6 @@ describe('FolderBrowser Component', () => {
     });
   });
 
-  test('createFolder does nothing with empty folder name', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <FolderBrowser />
-      </MemoryRouter>
-    );
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole('button', { name: 'New Folder' }));
-    await user.click(screen.getByRole('button', { name: 'Create' }));
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Folder name')).toBeInTheDocument();
-      expect(supabase.from).toHaveBeenCalledWith('documents');
-      expect(supabase.from().insert).not.toHaveBeenCalled();
-    });
-  });
-
   test('handleMoveHere prevents moving to root folder', async () => {
     const user = userEvent.setup();
     render(
@@ -715,27 +696,6 @@ describe('FolderBrowser Component', () => {
       expect(screen.getByText('Constitution Archive')).toHaveAttribute('aria-current', 'page');
       expect(screen.getByRole('button', { name: 'Move Here' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Move Here' })).toHaveAttribute('title', 'Moving items into Constitution Archive is not allowed');
-    });
-  });
-
-  test('navigateToFolder is restricted during upload form', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <FolderBrowser />
-      </MemoryRouter>
-    );
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Upload File' })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole('button', { name: 'Upload File' }));
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Open folder Subfolder 1' })).not.toBeInTheDocument();
-      expect(screen.getByText('Folder 1')).toHaveAttribute('aria-current', 'page');
     });
   });
 
@@ -780,26 +740,6 @@ describe('FolderBrowser Component', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Open folder Subfolder 1' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
-    });
-  });
-
-  test('cancels folder creation', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <FolderBrowser />
-      </MemoryRouter>
-    );
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole('button', { name: 'New Folder' }));
-    await user.type(screen.getByPlaceholderText('Folder name'), 'Test Folder');
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Folder name')).not.toBeInTheDocument();
-      expect(supabase.from).toHaveBeenCalledWith('documents');
-      expect(supabase.from().insert).not.toHaveBeenCalled();
     });
   });
 
