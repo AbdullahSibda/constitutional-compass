@@ -32,7 +32,7 @@ export default function Search({
         .eq('is_folder', false)
         .or(
           `metadata->>displayName.ilike.%${searchQuery}%,` +
-          `metadata->>type.ilike.%${searchQuery}%,` +
+          `metadata->>description.ilike.%${searchQuery}%,` +
           `metadata->>file_type.ilike.%${searchQuery}%,` +
           `metadata->>year.ilike.%${searchQuery}%`
         )

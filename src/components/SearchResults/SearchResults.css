@@ -13,7 +13,6 @@
   padding: 1rem 0;
 }
 
-
 .filters-wrapper {
   max-width: 800px;
   margin: 0 auto;
@@ -284,4 +283,29 @@
   color: #333;
   border-bottom: 2px solid #ccc;
   padding-bottom: 0.5rem;
+}
+.speak-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.speak-button:hover {
+  color: #0056b3;
+}
+
+.snippet-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.year-input {
+  width: 100px;
+  padding: 0.25rem;
+  font-size: 0.95rem;
+  color:white;
+  background-color: #333;
 }
