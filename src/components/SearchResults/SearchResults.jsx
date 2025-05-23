@@ -12,12 +12,18 @@ const textToSpeech = (text) => {
   window.speechSynthesis.speak(speech);
 };
 
-const download = (result) => {
-  let content = `FROM: ${result.title} \n\n`;
-
-  result.snippets.forEach((snippet) => {
-    const matchPercentage = Math.round((1 - snippet.score) * 100);
-    content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
+const downloadAllResults = (results) => {
+  let content = "";
+  
+  results.forEach((result) => {
+    content += `FROM: ${result.title} \n\n`;
+    
+    result.snippets.forEach((snippet) => {
+      const matchPercentage = Math.round((1 - snippet.score) * 100);
+      content += `• "${snippet.text}"\n  Match: ${matchPercentage}%\n\n`;
+    });
+    
+    content += "\n----------------------------------------\n\n";
   });
 
   const blob = new Blob([content], { type: "text/plain" });
@@ -25,7 +31,7 @@ const download = (result) => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${result.title.replace(/\.pdf$/i, "")}_results.txt`;
+  link.download = `search_results_${new Date().toISOString().slice(0, 10)}.txt`;
   link.click();
 
   URL.revokeObjectURL(url);
@@ -71,9 +77,9 @@ const SearchResults = ({ results, query }) => {
         <blockquote key={idx} className="snippet">
           <p className="snippet-text">{highlightText(snippet.text, query)}</p>
           <footer className="snippet-footer">
-            <span className="similarity-score">
+            <strong className="similarity-score">
               {Math.round(100 - (1 + snippet.score) * 100)}% match
-            </span>
+            </strong>
             <button
               className="speak-button"
               onClick={() => textToSpeech(snippet.text)}
@@ -98,24 +104,18 @@ const SearchResults = ({ results, query }) => {
 
       {result.metadata && (
         <section className="metadata-section">
-          {result.metadata.year && <span className="metadata-item">📅 {result.metadata.year}</span>}
-          {result.metadata.file_type && <span className="metadata-item">📄 {result.metadata.file_type}</span>}
-          {result.metadata.document_type && <span className="metadata-item">📄 {result.metadata.document_type}</span>}
+          {result.metadata.year && <strong className="metadata-item">📅 {result.metadata.year}</strong>}
+          {result.metadata.file_type && <strong className="metadata-item">📄 {result.metadata.file_type}</strong>}
+          {result.metadata.document_type && <strong className="metadata-item">📄 {result.metadata.document_type}</strong>}
           {result.metadata.publication_date && (
-            <span className="metadata-item">
+            <strong className="metadata-item">
               📅 {new Date(result.metadata.publication_date).toLocaleDateString()}
-            </span>
+            </strong>
           )}
         </section>
       )}
 
       {renderSnippets(result.snippets)}
-
-      <section className="download-button-container">
-        <button className="download-button" onClick={() => download(result)}>
-          Download
-        </button>
-      </section>
     </article>
   );
 
@@ -163,6 +163,15 @@ const SearchResults = ({ results, query }) => {
             </section>
           </section>
         </section>
+        
+        {/* Universal Download Button */}
+        <button 
+          className="download-all-button"
+          onClick={() => downloadAllResults(filteredResults)}
+          disabled={filteredResults.length === 0}
+        >
+          Download All Results
+        </button>
       </section>
 
       <section className="search-results">
