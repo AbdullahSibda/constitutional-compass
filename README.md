@@ -4,7 +4,7 @@
 - For each sprint, make a new branch and push all code to that
 - At the end of the sprint, merge with `dev` branch  
 - Never push directly to `main` unless triggering deployment to Azure
-- Tests MUST pass before merging  
+- Tests must pass before merging  
 
 ## Setup Commands  
 - Install Node.js v18.20.4
