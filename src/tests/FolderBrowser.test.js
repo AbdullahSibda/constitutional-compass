@@ -15,8 +15,10 @@ jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 jest.mock('../components/FileManager/Upload', () => jest.fn(() => null));
+jest.mock('../components/FileManager/Search', () => jest.fn(() => null));
 jest.mock('../components/FileManager/Edit', () => jest.fn(() => null));
 jest.mock('../components/FileManager/FileViewer', () => jest.fn(() => null));
+jest.mock('../components/FileManager/Delete', () => jest.fn(() => null));
 jest.mock('../components/FileManager/ContextMenu', () => jest.fn(({ item, onDownload, onDelete, onEdit, onMove }) => (
   <div role="menu">
     <button onClick={() => onDownload && onDownload(item)}>Download</button>
@@ -762,5 +764,382 @@ describe('FolderBrowser Component', () => {
     const contextButton = within(fileContainer).getByRole('button', { name: 'More actions' });
     expect(contextButton).toHaveAttribute('aria-haspopup', 'menu');
     expect(contextButton).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('ContentsDisplay renders single folder item', () => {
+    render(
+      <ContentsDisplay
+        contents={[mockFolder]}
+        loading={false}
+        showSearch={false}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    expect(screen.queryByText('View file')).not.toBeInTheDocument();
+  });
+
+  test('ContentsDisplay renders single file item', () => {
+    render(
+      <ContentsDisplay
+        contents={[mockFile]}
+        loading={false}
+        showSearch={false}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    expect(screen.getByText('pdf')).toHaveClass('file-type');
+    expect(screen.queryByText('Open folder')).not.toBeInTheDocument();
+  });
+
+  test('renders context menu for folder item', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    const folderContainer = screen.getByRole('button', { name: 'Open folder Folder 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(folderContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    });
+  });
+
+  test('ContentsDisplay renders empty state without loading', () => {
+    render(
+      <ContentsDisplay
+        contents={[]}
+        loading={false}
+        showSearch={false}
+        isFilterActive={false}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByText('This folder is empty')).toBeInTheDocument();
+    expect(screen.queryByText('Loading contents...')).not.toBeInTheDocument();
+  });
+
+  test('cancels new folder creation', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'New Folder' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('Folder name')).not.toBeInTheDocument();
+    });
+  });
+
+  test('ContentsDisplay renders no filter results with filter active', () => {
+    render(
+      <ContentsDisplay
+        contents={[]}
+        loading={false}
+        showSearch={false}
+        isFilterActive={true}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByText('No Results Match Your Filter')).toBeInTheDocument();
+  });
+
+  test('renders without Edit modal when editModal.show is false', () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    expect(Edit).not.toHaveBeenCalled();
+  });
+
+  test('navigateUp does nothing when at root folder', async () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Constitution Archive')).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByRole('button', { name: 'Go Up' })).not.toBeInTheDocument();
+    }, { timeout: 2000 });
+  });
+
+  test('renderBreadcrumbs renders single breadcrumb at root', () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole('navigation', { name: 'Folder navigation' })).toBeInTheDocument();
+    expect(screen.getByText('Constitution Archive')).toBeInTheDocument();
+    expect(screen.queryByText('>>')).not.toBeInTheDocument();
+  });
+
+  test('handleMoveHere does nothing when no item is being moved', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Move Here' })).not.toBeInTheDocument();
+    });
+  });
+
+  test('ContentsDisplay disables button for moving item', () => {
+    render(
+      <ContentsDisplay
+        contents={[mockFile]}
+        loading={false}
+        showSearch={false}
+        hasSearchResults={false}
+        isFilterActive={false}
+        movingItem={mockFile}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'View file File 1' })).toHaveClass('moving-disabled');
+    expect(screen.getByRole('button', { name: 'View file File 1' })).toBeDisabled();
+  });
+
+  test('renders filter input when filter is active', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: 'Select filter criteria' })).toBeInTheDocument();
+    });
+  });
+
+  test('cancels move operation', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+    });
+    const fileContainer = screen.getByRole('button', { name: 'View file File 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await user.click(screen.getByRole('button', { name: 'Move' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Cancel Move' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Cancel Move' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Move Here' })).not.toBeInTheDocument();
+    });
+  });
+
+  test('ContentsDisplay filters out root folder', () => {
+    const rootFolder = {
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'Constitution Archive',
+      is_folder: true,
+    };
+    render(
+      <ContentsDisplay
+        contents={[rootFolder, mockFile]}
+        loading={false}
+        showSearch={false}
+        hasSearchResults={false}
+        isFilterActive={false}
+        movingItem={null}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Open folder Constitution Archive' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View file File 1' })).toBeInTheDocument();
+  });
+
+  test('disables upload button at root folder', () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Upload File' })).toHaveAttribute('title', 'Uploads disabled in Constitution Archive');
+  });
+
+  test('context menu trigger has aria-expanded true when open', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    const folderContainer = screen.getByRole('button', { name: 'Open folder Folder 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(folderContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await waitFor(() => {
+      expect(moreActionsButton).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  test('isDescendant returns false for non-descendant folder', async () => {
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    const fileContainer = screen.getByRole('button', { name: 'View file File 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(fileContainer).getByRole('button', { name: 'More actions' });
+    await userEvent.click(moreActionsButton);
+    await userEvent.click(screen.getByRole('button', { name: 'Move' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Move Here' })).not.toBeDisabled();
+    });
+  });
+
+  test('renders create folder form when showCreateFolder is true', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'New Folder' }));
+    expect(screen.getByPlaceholderText('Folder name')).toBeInTheDocument();
+  });
+
+  test('create folder form buttons are disabled during loading', async () => {
+    supabase.from.mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      ilike: jest.fn().mockReturnThis(),
+      then: jest.fn().mockResolvedValue({ data: [], error: null }),
+    }));
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Folder' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'New Folder' }));
+    await user.type(screen.getByPlaceholderText('Folder name'), 'Test Folder');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Creating...' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    });
+  });
+
+  test('ContentsDisplay renders empty folder message with loading false', () => {
+    render(
+      <ContentsDisplay
+        contents={[]}
+        loading={false}
+        showSearch={false}
+        hasSearchResults={false}
+        isFilterActive={false}
+        movingItem={null}
+        navigateToFolder={jest.fn()}
+        handleContextMenu={jest.fn()}
+        handleViewFile={jest.fn()}
+        contextMenu={{ show: false, item: null }}
+      />
+    );
+    expect(screen.getByText('This folder is empty')).toBeInTheDocument();
+  });
+
+
+  test('move button is disabled at root folder', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    const folderContainer = screen.getByRole('button', { name: 'Open folder Folder 1' }).closest('.browser-item-container');
+    const moreActionsButton = within(folderContainer).getByRole('button', { name: 'More actions' });
+    await user.click(moreActionsButton);
+    await user.click(screen.getByRole('button', { name: 'Move' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Move Here' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Move Here' })).toHaveAttribute('title', 'Moving items into Constitution Archive is not allowed');
+    });
+  });
+
+  test('renders breadcrumb separator for multiple path items', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FolderBrowser />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open folder Folder 1' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'Open folder Folder 1' }));
+    await waitFor(() => {
+      expect(screen.getByText('>>')).toBeInTheDocument();
+    });
   });
 });

@@ -164,7 +164,6 @@ const SearchResults = ({ results, query }) => {
           </section>
         </section>
         
-        {/* Universal Download Button */}
         <button 
           className="download-all-button"
           onClick={() => downloadAllResults(filteredResults)}
